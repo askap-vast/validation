@@ -9,7 +9,7 @@ from astropy.time import Time
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.utils.timezone import make_aware, utc
-from validation.models import Observation
+from validation.models import Observation, Crossmatch, Field
 
 ASKAP_ANT01_LOCATION = EarthLocation.from_geodetic(116.631424, -26.697000, 360.99)
 
@@ -119,9 +119,9 @@ class Command(BaseCommand):
                 )
                 continue  # next image file
             frequency_band = (
-                Observation.FrequencyBand.LOW
+                Field.FrequencyBand.LOW
                 if image_header["CRVAL3"] <= 888e6
-                else Observation.FrequencyBand.MID
+                else Field.FrequencyBand.MID
             )
             start_time = Time(image_header["DATE-OBS"], location=ASKAP_ANT01_LOCATION)
             lmst = start_time.sidereal_time(kind="mean")
@@ -134,16 +134,23 @@ class Command(BaseCommand):
             )
             hour_angle = lmst - image_ref_coord.ra
 
+            field_obj, _ = Field.objects.get_or_create(
+                name=field,
+                frequency_band=frequency_band,
+                defaults={"ra": image_ref_coord.ra.deg, "dec": image_ref_coord.dec.deg},
+            )
+
             obs = Observation(
                 sbid=sbid,
-                field=field,
+                field=field_obj,
                 image_path=image_path,
                 components_path=components_path,
                 islands_path=islands_path,
                 start_datetime=make_aware(start_time.datetime, timezone=utc),
-                duration=timedelta(seconds=image_header["DURATION"]),
-                imaged_datetime=make_aware(Time(image_header["DATE"]).datetime, timezone=utc),
-                frequency_band=frequency_band,
+                duration=timedelta(seconds=float(image_header["DURATION"])),
+                imaged_datetime=make_aware(
+                    Time(image_header["DATE"]).datetime, timezone=utc
+                ),
                 psf_major_arcsec=image_header["BMAJ"] * 3600,
                 psf_minor_arcsec=image_header["BMIN"] * 3600,
                 psf_pa_deg=image_header["BPA"],
@@ -158,16 +165,29 @@ class Command(BaseCommand):
             # VAST_0012-06A.SB11111.RACS.<Observation ID>.csv. Include the observation
             # ID in the rare case of duplicate fields in a SB.
 
+            # for now, assume the crossmatching was successful
+            crossmatch_catalogs = settings.CROSSMATCH_DIR.glob(
+                f"{obs.field}.SB{obs.sbid}.*.csv"
+            )
+            for catalog in crossmatch_catalogs:
+                ref_catalog = catalog.stem.split(".")[2]
+                cm = Crossmatch(
+                    observation=obs,
+                    reference_catalog=ref_catalog,
+                    file_path=catalog.resolve(),
+                )
+                cm.save()
+
             # now move the data products to the unassigned directory
             obs.image_path = image_path.rename(
                 settings.UNASSIGNED_DIR / image_path.name
-            )
+            ).resolve()
             obs.components_path = components_path.rename(
                 settings.UNASSIGNED_DIR / components_path.name
-            )
+            ).resolve()
             obs.islands_path = islands_path.rename(
                 settings.UNASSIGNED_DIR / islands_path.name
-            )
+            ).resolve()
             obs.save()
             self.stdout.write(
                 self.style.SUCCESS(
