@@ -1,0 +1,49 @@
+{% extends 'validation/base.html' %}
+{% load tz %}
+{% load validation_extras %}
+{% block content %}
+<section class="container">
+<h1>Observation List</h1>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Band</th>
+      <th scope="col">Field</th>
+      <th scope="col">SBID</th>
+      <th scope="col">Date (UTC)</th>
+      <th scope="col">Duration</th>
+      <th scope="col">Epoch</th>
+      <th scope="col">Quality</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for observation in observation_list %}
+    <tr>
+      <td>{{ observation.field.frequency_band }}</td>
+      <td>{{ observation.field.name }}</td>
+      <td>{{ observation.sbid }}</td>
+      <td>{{ observation.start_datetime|utc }}</td>
+      <td>{{ observation.duration|duration_mins }}</td>
+      <td>{{ observation.epoch }}</td>
+      <td><a href="{% url 'observation-detail' observation.id %}"><span class="badge bg-warning">{{ observation.get_data_quality_display }}</span></a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<nav>
+  <ul class="pagination justify-content-end">
+    <li class="page-item{% if not page_obj.has_previous %} disabled{% endif %}">
+      <a class="page-link" href="{% if page_obj.has_previous %}{% url 'observation-list' %}?page={{ page_obj.previous_page_number }}{% else %}#{% endif %}" tabindex="-1" aria-disabled="true">Previous</a>
+    </li>
+    {% for page_number in page_range %}
+    <li class="page-item{% if page_number == page_obj.number %} active{% endif %}"><a class="page-link" href="{% if page_number != paginator.ELLIPSIS %}{% url 'observation-list' %}?page={{ page_number }}{% else %}#{% endif %}">{{ page_number }}</a></li>
+    {% endfor %}
+    <li class="page-item{% if not page_obj.has_next %} disabled{% endif %}">
+      <a class="page-link" href="{% if page_obj.has_next %}{% url 'observation-list' %}?page={{ page_obj.next_page_number }}{% else %}#{% endif %}">Next</a>
+    </li>
+  </ul>
+</nav>
+
+</section>
+{% endblock content %}

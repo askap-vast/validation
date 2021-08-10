@@ -6,19 +6,21 @@ User = get_user_model()
 
 
 class Field(models.Model):
-
     class FrequencyBand(models.IntegerChoices):
         LOW = 1  # <= 888 MHz
         MID = 2
 
     name = models.CharField(max_length=15)
+    frequency_MHz = models.FloatField(help_text="Frequency in MHz")
     frequency_band = models.PositiveSmallIntegerField(choices=FrequencyBand.choices)
     ra = models.FloatField()
     dec = models.FloatField()
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["name", "frequency_band"], name="unique_field"),
+            models.UniqueConstraint(
+                fields=["name", "frequency_band"], name="unique_field"
+            ),
         ]
 
     def __str__(self):
@@ -79,8 +81,24 @@ class Observation(models.Model):
     hour_angle = models.FloatField()
     elevation = models.FloatField()
 
+    class Meta:
+        ordering = ["field__name", "-sbid"]
+
     def __str__(self):
         return f"{self.field} SB{self.sbid}"
+
+
+class ReferenceCatalog(models.Model):
+    """A reference catalog that can be crossmatched to a VAST Observation catalogs."""
+    name = models.CharField(primary_key=True, max_length=25)
+    frequency_MHz = models.FloatField(help_text="Frequency in MHz", null=True, blank=True)
+
+    class Meta:
+        ordering = ["name", ]
+
+    def __str__(self):
+        freq_str = f" ({self.frequency_MHz:.0f} MHz)" if self.frequency_MHz is not None else ""
+        return f"{self.name}{freq_str}"
 
 
 class Crossmatch(models.Model):
@@ -89,8 +107,14 @@ class Crossmatch(models.Model):
     """
 
     observation = models.ForeignKey(Observation, on_delete=models.CASCADE)
-    reference_catalog = models.CharField(max_length=25)
+    reference_catalog = models.ForeignKey(ReferenceCatalog, on_delete=models.CASCADE)
     file_path = models.FilePathField(
-        path=settings.VALIDATION_DIR, match=r".*\.csv$", max_length=200
+        path=settings.CROSSMATCH_DIR, match=r".*\.csv$", max_length=200
     )
     # TODO add crossmatch metadata e.g. radius, SNR cutoffs. Anything required to reproduce.
+
+    def __str__(self):
+        return (
+            f"Crossmatch {self.observation.field} -"
+            f" SB{self.observation.sbid} {self.reference_catalog}"
+        )

@@ -9,7 +9,7 @@ from astropy.time import Time
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.utils.timezone import make_aware, utc
-from validation.models import Observation, Crossmatch, Field
+from validation.models import Observation, Field
 
 ASKAP_ANT01_LOCATION = EarthLocation.from_geodetic(116.631424, -26.697000, 360.99)
 
@@ -118,9 +118,10 @@ class Command(BaseCommand):
                     )
                 )
                 continue  # next image file
+            frequency_MHz = image_header["CRVAL3"] / 1e6
             frequency_band = (
                 Field.FrequencyBand.LOW
-                if image_header["CRVAL3"] <= 888e6
+                if frequency_MHz <= 888
                 else Field.FrequencyBand.MID
             )
             start_time = Time(image_header["DATE-OBS"], location=ASKAP_ANT01_LOCATION)
@@ -137,7 +138,11 @@ class Command(BaseCommand):
             field_obj, _ = Field.objects.get_or_create(
                 name=field,
                 frequency_band=frequency_band,
-                defaults={"ra": image_ref_coord.ra.deg, "dec": image_ref_coord.dec.deg},
+                defaults={
+                    "ra": image_ref_coord.ra.deg,
+                    "dec": image_ref_coord.dec.deg,
+                    "frequency_MHz": frequency_MHz,
+                },
             )
 
             obs = Observation(
@@ -164,19 +169,6 @@ class Command(BaseCommand):
             # to settings.CROSSMATCH_DIR with name e.g.
             # VAST_0012-06A.SB11111.RACS.<Observation ID>.csv. Include the observation
             # ID in the rare case of duplicate fields in a SB.
-
-            # for now, assume the crossmatching was successful
-            crossmatch_catalogs = settings.CROSSMATCH_DIR.glob(
-                f"{obs.field}.SB{obs.sbid}.*.csv"
-            )
-            for catalog in crossmatch_catalogs:
-                ref_catalog = catalog.stem.split(".")[2]
-                cm = Crossmatch(
-                    observation=obs,
-                    reference_catalog=ref_catalog,
-                    file_path=catalog.resolve(),
-                )
-                cm.save()
 
             # now move the data products to the unassigned directory
             obs.image_path = image_path.rename(

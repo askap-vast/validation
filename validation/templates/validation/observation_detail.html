@@ -1,0 +1,120 @@
+{% extends 'validation/base.html' %}
+{% load tz %}
+{% load validation_extras %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />
+{% endblock extra_head %}
+
+{% block content %}
+<section class="container">
+  <!--nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'observation-list' %}">Observations</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ object.field }} – SB{{ object.sbid }}</li>
+    </ol>
+  </nav-->
+  <h1>{{ object.field.name }} – SB{{ object.sbid }}</h1>
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="card">
+        <h5 class="card-header">Summary</h5>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-3 text-end">Field</dt>
+            <dd class="col-sm-9">{{ object.field.name }}</dd>
+            
+            <dt class="col-sm-3 text-end">SBID</dt>
+            <dd class="col-sm-9">{{ object.sbid }}</dd>
+            
+            <dt class="col-sm-3 text-end">Frequency band</dt>
+            <dd class="col-sm-9">{{ object.field.get_frequency_band_display }}</dd>
+            
+            <dt class="col-sm-3 text-end">Start</dt>
+            <dd class="col-sm-9">{{ object.start_datetime|utc }}</dd>
+            
+            <dt class="col-sm-3 text-end">Duration</dt>
+            <dd class="col-sm-9">{{ object.duration|duration_mins }}</dd>
+            
+            <dt class="col-sm-3 text-end">Epoch</dt>
+            <dd class="col-sm-9">{{ object.epoch|default:"Unassigned" }}</dd>
+            
+            <dt class="col-sm-3 text-end">Hour angle</dt>
+            <dd class="col-sm-9">{{ object.hour_angle|floatformat }}</dd>
+            
+            <dt class="col-sm-3 text-end">Elevation</dt>
+            <dd class="col-sm-9">{{ object.elevation|floatformat }}</dd>
+            
+            <dt class="col-sm-3 text-end">Data Quality</dt>
+            <dd class="col-sm-9"><span class="badge bg-warning">{{ object.get_data_quality_display }}</span></dd>
+            
+            {% if object.validator %}
+            <dt class="col-sm-3 text-end">Validated</dt>
+            <dd class="col-sm-9">By {{ object.validator }} on {{ object.validated_datetime }}</dd>
+            {% endif %}
+            
+            <dt class="col-sm-3 text-end">Imaged</dt>
+            <dd class="col-sm-9">{{ object.imaged_datetime|utc }}</dd>
+            
+            <dt class="col-sm-3 text-end">Ingested</dt>
+            <dd class="col-sm-9">{{ object.ingested_datetime|utc }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <h5 class="card-header">HiPS Preview</h5>
+        <div class="card-body p-0" style="min-height: 25rem;">
+          <div id="aladin-lite-div" class="h-100 w-100">
+            <p class="position-absolute top-50 start-50 translate-middle text-center mb-0">HiPS previews are only available if an epoch has been assigned.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> <!-- /row -->
+</section>
+
+<section class="container mt-3">
+  <h2>Crossmatches</h2>
+  {% for reference_catalog, plots in crossmatch_plots.items %}
+  <div class="row">
+    <div class="col">
+      <div class="card mb-3">
+        <h5 class="card-header">{{ reference_catalog }}</h5>
+        <div class="card-body">
+          <div class="row">
+            {% for plot in plots.divs %}
+            <div class="col">
+              {{ plot|safe }}
+            </div>
+            {% endfor %}
+            {{ plots.script|safe }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endblock content %}
+
+{% block extra_script %}
+<!-- JQuery. Required by Aladin Lite -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+{% if object.epoch %}
+<!-- Aladin Lite -->
+<script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8"></script>
+<script type="text/javascript">
+    var aladin = A.aladin('#aladin-lite-div', {fov:12});
+    aladin.setImageSurvey(
+      aladin.createImageSurvey("VAST", "VAST Epoch {{ object.epoch|safe }}", "https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST" + {{ object.epoch|safe }} + "_I4", "equatorial", 6, {imgFormat: "png"})
+    );
+    aladin.gotoRaDec({{ object.field.ra|safe }}, {{ object.field.dec|safe}});
+</script>
+{% endif %}
+
+<!-- BokehJS -->
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-{{ bokeh_version|safe }}.min.js" integrity="sha384-{{ bokeh_sri_hash|safe }}" crossorigin="anonymous"></script>
+{% endblock extra_script %}
