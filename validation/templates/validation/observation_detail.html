@@ -7,7 +7,7 @@
 {% endblock extra_head %}
 
 {% block content %}
-<section class="container">
+<section class="container d-grid gap-3">
   <!--nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{% url 'observation-list' %}">Observations</a></li>
@@ -73,6 +73,18 @@
       </div>
     </div>
   </div> <!-- /row -->
+
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <h5 class="card-header">PSF</h5>
+        <div class="card-body">
+          {{ psf_plot.divs|safe }}
+          {{ psf_plot.script|safe }}
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section class="container mt-3">
@@ -109,7 +121,7 @@
 <script type="text/javascript">
     var aladin = A.aladin('#aladin-lite-div', {fov:12});
     aladin.setImageSurvey(
-      aladin.createImageSurvey("VAST", "VAST Epoch {{ object.epoch|safe }}", "https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST" + {{ object.epoch|safe }} + "_I4", "equatorial", 6, {imgFormat: "png"})
+      aladin.createImageSurvey("VAST", "VAST Epoch {{ object.epoch|safe }}", "https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST{{ object.epoch }}_I4", "equatorial", 6, {imgFormat: "png"})
     );
     aladin.gotoRaDec({{ object.field.ra|safe }}, {{ object.field.dec|safe}});
 </script>

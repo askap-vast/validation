@@ -3,7 +3,7 @@ from bokeh.embed import components
 import bokeh.resources
 from django.views.generic import ListView, DetailView
 from validation.models import Observation
-from validation.plots import make_crossmatch_plots
+from validation.plots import make_crossmatch_plots, make_psf_plot
 
 
 class ObservationListView(ListView):
@@ -40,4 +40,12 @@ class ObservationDetailView(DetailView):
                 "divs": divs,
             }
         context["crossmatch_plots"] = crossmatch_plots
+
+        psf_plot_script, psf_plot_divs = components(
+            make_psf_plot(observation, min_data_range=2, plot_width=200, plot_height=200)
+        )
+        context["psf_plot"] = {
+            "script": psf_plot_script,
+            "divs": psf_plot_divs,
+        }
         return context

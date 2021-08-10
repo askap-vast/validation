@@ -9,17 +9,39 @@ from bokeh.models import (
     ColorBar,
     DataRange1d,
     Label,
+    Legend,
     Span,
     Slope,
     Whisker,
 )
-from bokeh.transform import log_cmap
+from bokeh.transform import log_cmap, linear_cmap
+from django.db.models.functions import Abs
 import pandas as pd
 import numpy as np
 
-from validation.models import Crossmatch
+from validation.models import Crossmatch, Observation, Field
 
 DEFAULT_TOOLS = ["pan,box_zoom,wheel_zoom,box_select,lasso_select,save,reset"]
+
+
+def _padded_data_range(
+    min_data_value: float,
+    max_data_value: float,
+    frac_padding: float = 0.05,
+    min_range: Optional[float] = None,
+) -> DataRange1d:
+    padding = (max_data_value - min_data_value) * frac_padding
+    min_data_value -= padding
+    max_data_value += padding
+    data_range = max_data_value - min_data_value
+    if min_range is not None and data_range < min_range:
+        mid_data_value = (min_data_value + max_data_value) / 2
+        data_range_obj = DataRange1d(
+            start=mid_data_value - min_range / 2, end=mid_data_value + min_range / 2
+        )
+    else:
+        data_range_obj = DataRange1d(start=min_data_value, end=max_data_value)
+    return data_range_obj
 
 
 def _make_astrometry_plot(
@@ -28,7 +50,7 @@ def _make_astrometry_plot(
     pixel_size: Optional[Tuple[float, float]] = None,
     plot_width: int = 400,
     plot_height: int = 400,
-):
+) -> Figure:
     coords_vast = SkyCoord(ra=source.data["RA"], dec=source.data["DEC"], unit="deg")
     coords_racs = SkyCoord(
         ra=source.data["RA_comp"], dec=source.data["DEC_comp"], unit="deg"
@@ -45,8 +67,7 @@ def _make_astrometry_plot(
     # if a pixel size is given, make sure the data range is set to always include it
     if pixel_size:
         max_offset = max(max_offset, *[x / 2 for x in pixel_size])
-    max_offset = max_offset + (max_offset * 0.05)
-    data_range = DataRange1d(start=-max_offset, end=max_offset)
+    data_range = _padded_data_range(-max_offset, max_offset)
 
     fig_pos = figure(
         frame_width=plot_width,
@@ -146,16 +167,18 @@ def _make_astrometry_plot(
         cbar = ColorBar(
             color_mapper=cmap["transform"],
             title="Flux density (mJy)",
-            title_standoff=-120,
         )
         fig_pos.add_layout(cbar, "right")
     return fig_pos
 
 
 def _make_flux_plot(
-    source: ColumnDataSource, crossmatch: Crossmatch, alpha: float = -0.8, plot_width: int = 400,
+    source: ColumnDataSource,
+    crossmatch: Crossmatch,
+    alpha: float = -0.8,
+    plot_width: int = 400,
     plot_height: int = 400,
-):
+) -> Figure:
     # calculate the plot range such that the aspect ratio is 1 and the min/max are the
     # nearest powers of 10
     min_flux = min(source.data["ASKAP_flux"].min(), source.data["Comp_flux"].min())
@@ -218,8 +241,11 @@ def _make_flux_plot(
 
 
 def make_crossmatch_plots(catalog: Crossmatch) -> Tuple[Figure, ...]:
-    source = ColumnDataSource(data=pd.read_csv(catalog.file_path))
     do_flux_plot = catalog.reference_catalog.frequency_MHz is not None
+    df = pd.read_csv(catalog.file_path)
+    if do_flux_plot:
+        df = df.sort_values("ASKAP_flux")
+    source = ColumnDataSource(data=df)
     hue_column = "ASKAP_flux" if do_flux_plot else None
 
     # get pixel size
@@ -234,3 +260,80 @@ def make_crossmatch_plots(catalog: Crossmatch) -> Tuple[Figure, ...]:
         return (astrometry_plot, flux_plot)
     else:
         return (astrometry_plot,)
+
+
+def make_psf_plot(
+    observation: Observation,
+    field_ddec: float = 2.5,
+    min_data_range: Optional[float] = None,
+    plot_width: int = 400,
+    plot_height: int = 400,
+) -> Figure:
+    # get PSFs for observations at similar Declination and frequency
+    fields = Field.objects.filter(
+        frequency_band=observation.field.frequency_band,
+        dec__range=(
+            observation.field.dec - field_ddec,
+            observation.field.dec + field_ddec,
+        ),
+    )
+    psfs_df = pd.DataFrame(
+        data=Observation.objects.filter(field__in=fields).values(
+            "psf_major_arcsec", "psf_minor_arcsec", hour_angle_abs=Abs("hour_angle")
+        )
+    )
+    source = ColumnDataSource(data=psfs_df)
+
+    data_range_major = _padded_data_range(
+        source.data["psf_major_arcsec"].min(),
+        source.data["psf_major_arcsec"].max(),
+        min_range=min_data_range,
+    )
+    data_range_minor = _padded_data_range(
+        source.data["psf_minor_arcsec"].min(),
+        source.data["psf_minor_arcsec"].max(),
+        min_range=min_data_range,
+    )
+
+    fig_psf = figure(
+        frame_width=plot_width,
+        frame_height=plot_height,
+        toolbar_location="above",
+        x_range=data_range_minor,
+        y_range=data_range_major,
+        x_axis_label="PSF minor (arcsec)",
+        y_axis_label="PSF major (arcsec)",
+        tools="pan,box_zoom,wheel_zoom,reset",
+    )
+    cmap = linear_cmap(
+        "hour_angle_abs",
+        Magma256,
+        low=0,
+        high=6,
+    )
+    fig_psf.dot(
+        x="psf_minor_arcsec", y="psf_major_arcsec", size=30, color=cmap, source=source
+    )
+    this_psf = fig_psf.circle(
+        x=observation.psf_minor_arcsec,
+        y=observation.psf_major_arcsec,
+        size=10,
+        fill_color=None,
+        line_color="lime",
+        line_width=2,
+    )
+
+    legend = Legend(
+        items=[("This image", [this_psf])],
+        background_fill_alpha=0.5,
+        border_line_color=None,
+        margin=5,
+    )
+    fig_psf.add_layout(legend)
+
+    cbar = ColorBar(
+        color_mapper=cmap["transform"],
+        title="abs(Hour angle)",
+    )
+    fig_psf.add_layout(cbar, "right")
+    return fig_psf
