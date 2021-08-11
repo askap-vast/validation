@@ -335,5 +335,5 @@ def make_psf_plot(
         color_mapper=cmap["transform"],
         title="abs(Hour angle)",
     )
-    fig_psf.add_layout(cbar, "right")
+    fig_psf.add_layout(cbar, "below")
     return fig_psf

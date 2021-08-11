@@ -16,53 +16,61 @@
   </nav-->
   <h1>{{ object.field.name }} – SB{{ object.sbid }}</h1>
   <div class="row">
-    <div class="col-lg-6">
+    <div class="col-xl-8 col-lg-6">
       <div class="card">
         <h5 class="card-header">Summary</h5>
         <div class="card-body">
-          <dl class="row">
-            <dt class="col-sm-3 text-end">Field</dt>
-            <dd class="col-sm-9">{{ object.field.name }}</dd>
-            
-            <dt class="col-sm-3 text-end">SBID</dt>
-            <dd class="col-sm-9">{{ object.sbid }}</dd>
-            
-            <dt class="col-sm-3 text-end">Frequency band</dt>
-            <dd class="col-sm-9">{{ object.field.get_frequency_band_display }}</dd>
-            
-            <dt class="col-sm-3 text-end">Start</dt>
-            <dd class="col-sm-9">{{ object.start_datetime|utc }}</dd>
-            
-            <dt class="col-sm-3 text-end">Duration</dt>
-            <dd class="col-sm-9">{{ object.duration|duration_mins }}</dd>
-            
-            <dt class="col-sm-3 text-end">Epoch</dt>
-            <dd class="col-sm-9">{{ object.epoch|default:"Unassigned" }}</dd>
-            
-            <dt class="col-sm-3 text-end">Hour angle</dt>
-            <dd class="col-sm-9">{{ object.hour_angle|floatformat }}</dd>
-            
-            <dt class="col-sm-3 text-end">Elevation</dt>
-            <dd class="col-sm-9">{{ object.elevation|floatformat }}</dd>
-            
-            <dt class="col-sm-3 text-end">Data Quality</dt>
-            <dd class="col-sm-9"><span class="badge bg-warning">{{ object.get_data_quality_display }}</span></dd>
-            
-            {% if object.validator %}
-            <dt class="col-sm-3 text-end">Validated</dt>
-            <dd class="col-sm-9">By {{ object.validator }} on {{ object.validated_datetime }}</dd>
-            {% endif %}
-            
-            <dt class="col-sm-3 text-end">Imaged</dt>
-            <dd class="col-sm-9">{{ object.imaged_datetime|utc }}</dd>
-            
-            <dt class="col-sm-3 text-end">Ingested</dt>
-            <dd class="col-sm-9">{{ object.ingested_datetime|utc }}</dd>
-          </dl>
+          <div class="row">
+            <div class="col-xl-6">
+              <dl class="row">
+                <dt class="col-4 text-end">Field</dt>
+                <dd class="col-8">{{ object.field.name }}</dd>
+                
+                <dt class="col-4 text-end">SBID</dt>
+                <dd class="col-8">{{ object.sbid }}</dd>
+                
+                <dt class="col-4 text-end">Frequency</dt>
+                <dd class="col-8">{{ object.field.get_frequency_band_display }} band</dd>
+                
+                <dt class="col-4 text-end">Start</dt>
+                <dd class="col-8">{{ object.start_datetime|utc }}</dd>
+                
+                <dt class="col-4 text-end">Duration</dt>
+                <dd class="col-8">{{ object.duration|duration_mins }}</dd>
+                
+                <dt class="col-4 text-end">Epoch</dt>
+                <dd class="col-8">{{ object.epoch|default:"Unassigned" }}</dd>
+                
+                <dt class="col-4 text-end">Hour angle</dt>
+                <dd class="col-8">{{ object.hour_angle|floatformat }}</dd>
+                
+                <dt class="col-4 text-end">Elevation</dt>
+                <dd class="col-8">{{ object.elevation|floatformat }}</dd>
+                
+                <dt class="col-4 text-end">Data Quality</dt>
+                <dd class="col-8"><span class="badge bg-warning">{{ object.get_data_quality_display }}</span></dd>
+                
+                {% if object.validator %}
+                <dt class="col-4 text-end">Validated</dt>
+                <dd class="col-8">By {{ object.validator }} on {{ object.validated_datetime }}</dd>
+                {% endif %}
+                
+                <dt class="col-4 text-end">Imaged</dt>
+                <dd class="col-8">{{ object.imaged_datetime|utc }}</dd>
+                
+                <dt class="col-4 text-end">Ingested</dt>
+                <dd class="col-8">{{ object.ingested_datetime|utc }}</dd>
+              </dl>
+            </div>
+            <div class="col-xl-6">
+              {{ psf_plot.divs|safe }}
+              {{ psf_plot.script|safe }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-lg-6">
+    <div class="col">
       <div class="card h-100">
         <h5 class="card-header">HiPS Preview</h5>
         <div class="card-body p-0" style="min-height: 25rem;">
@@ -73,18 +81,6 @@
       </div>
     </div>
   </div> <!-- /row -->
-
-  <div class="row">
-    <div class="col">
-      <div class="card">
-        <h5 class="card-header">PSF</h5>
-        <div class="card-body">
-          {{ psf_plot.divs|safe }}
-          {{ psf_plot.script|safe }}
-        </div>
-      </div>
-    </div>
-  </div>
 </section>
 
 <section class="container mt-3">
