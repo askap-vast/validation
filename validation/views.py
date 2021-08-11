@@ -17,7 +17,6 @@ def login(request):
 
 class ObservationListView(LoginRequiredMixin, ListView):
     model = Observation
-    ordering = "-start_datetime"
     paginate_by = 10
 
     def get_context_data(self, **kwargs):
@@ -86,6 +85,7 @@ class PendingValidationListView(ObservationListView):
     queryset = Observation.objects.filter(
         data_quality=Observation.ValidationState.NOT_VALIDATED
     )
+    ordering = "start_datetime"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -21,13 +21,17 @@
   <tbody>
     {% for observation in observation_list %}
     <tr>
-      <td>{{ observation.field.frequency_band }}</td>
+      <td>{{ observation.field.get_frequency_band_display }}</td>
       <td>{{ observation.field.name }}</td>
       <td>{{ observation.sbid }}</td>
       <td>{{ observation.start_datetime|utc }}</td>
       <td>{{ observation.duration|duration_mins }}</td>
       <td>{{ observation.epoch }}</td>
       <td><a href="{% url 'observation-detail' observation.id %}"><span class="badge bg-{{ observation.data_quality_color_class }}">{{ observation.get_data_quality_display }}</span></a></td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="7" class="text-center fst-italic py-3">No observations pending validation.</td>
     </tr>
     {% endfor %}
   </tbody>
