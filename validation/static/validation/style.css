@@ -1,3 +1,9 @@
 .bokeh-center > div.bk-root > div.bk {
     margin: 0 auto !important;
 }
+
+.login-container {
+    width: 100%;
+    max-width: 500px;
+    margin: auto;
+}

@@ -1,12 +1,18 @@
 from typing import Any, Dict
 from bokeh.embed import components
 import bokeh.resources
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render
 from django.views.generic import ListView, DetailView
 from validation.models import Observation
 from validation.plots import make_crossmatch_plots, make_psf_plot
 
 
-class ObservationListView(ListView):
+def login(request):
+    return render(request, "validation/login.html")
+
+
+class ObservationListView(LoginRequiredMixin, ListView):
     model = Observation
     ordering = "-start_datetime"
     paginate_by = 10
@@ -20,7 +26,7 @@ class ObservationListView(ListView):
         return context
 
 
-class ObservationDetailView(DetailView):
+class ObservationDetailView(LoginRequiredMixin, DetailView):
     model = Observation
 
     def get_context_data(self, **kwargs):

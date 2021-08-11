@@ -1,0 +1,12 @@
+{% extends 'validation/base.html' %}
+{% block navbar %}{% endblock navbar %}
+{% block content %}
+<main class="d-flex align-items-center vh-100">
+  <div class="login-container text-center">
+    <p class="lead">Please login using a GitHub account that is a member of the validation team within the <a href="https://github.com/askap-vast" target="_blank">askap-vast</a> GitHub organization.</p>
+    <a href="{% url 'social:begin' 'github-team' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" class="btn btn-primary btn-user btn-block">
+      <i class="bi-github"></i> Login with GitHub
+    </a>
+  </div>
+</main>
+{% endblock content %}

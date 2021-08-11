@@ -5,10 +5,10 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />
-<link rel="stylesheet" href="{% static 'validation/style.css' %}" />
 {% endblock extra_head %}
 
 {% block content %}
+<main>
 <section class="container d-grid gap-3">
   <!--nav aria-label="breadcrumb">
     <ol class="breadcrumb">
@@ -107,6 +107,7 @@
   </div>
   {% endfor %}
 </section>
+</main>
 {% endblock content %}
 
 {% block extra_script %}
