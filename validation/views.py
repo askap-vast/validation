@@ -3,7 +3,10 @@ from bokeh.embed import components
 import bokeh.resources
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
-from django.views.generic import ListView, DetailView
+from django.urls import reverse
+from django.views.generic import ListView
+from django.views.generic.edit import UpdateView
+from validation.forms import ValidationForm
 from validation.models import Observation
 from validation.plots import make_crossmatch_plots, make_psf_plot
 
@@ -26,8 +29,10 @@ class ObservationListView(LoginRequiredMixin, ListView):
         return context
 
 
-class ObservationDetailView(LoginRequiredMixin, DetailView):
+class ObservationDetailView(LoginRequiredMixin, UpdateView):
     model = Observation
+    form_class = ValidationForm
+    template_name = "validation/observation_detail.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -57,6 +62,24 @@ class ObservationDetailView(LoginRequiredMixin, DetailView):
             "divs": psf_plot_divs,
         }
         return context
+
+    def form_valid(self, form):
+        form.instance.validator = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        next_observation = (
+            Observation.objects.filter(
+                data_quality=Observation.ValidationState.NOT_VALIDATED
+            )
+            .order_by("start_datetime")
+            .first()
+        )
+        if next_observation is None:
+            url = reverse("pending-list")
+        else:
+            url = next_observation.get_absolute_url()
+        return url
 
 
 class PendingValidationListView(ObservationListView):

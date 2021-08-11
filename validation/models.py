@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -34,9 +35,9 @@ class Observation(models.Model):
 
     class ValidationState(models.TextChoices):
         NOT_VALIDATED = "N"
-        REJECTED = "R"
         GOOD = "G"
         UNCERTAIN = "U"
+        REJECTED = "R"
 
     sbid = models.PositiveIntegerField()
     calibration_sbid = models.PositiveIntegerField(null=True, blank=True, default=None)
@@ -80,6 +81,7 @@ class Observation(models.Model):
     rms_median = models.FloatField(null=True, blank=True, default=None)
     hour_angle = models.FloatField()
     elevation = models.FloatField()
+    validation_comment = models.TextField(blank=True)
 
     class Meta:
         ordering = ["field__name", "-sbid"]
@@ -93,12 +95,15 @@ class Observation(models.Model):
         if self.data_quality == self.ValidationState.REJECTED:
             color_class = "danger"
         elif self.data_quality == self.ValidationState.UNCERTAIN:
-            color_class = "secondary"
+            color_class = "dark"
         elif self.data_quality == self.ValidationState.GOOD:
             color_class = "success"
         elif self.data_quality == self.ValidationState.NOT_VALIDATED:
             color_class = "warning"
         return color_class
+
+    def get_absolute_url(self):
+        return reverse("observation-detail", kwargs={"pk": self.pk})
 
 
 class ReferenceCatalog(models.Model):
