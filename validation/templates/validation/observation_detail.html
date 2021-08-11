@@ -50,7 +50,7 @@
                 <dd class="col-8">{{ object.elevation|floatformat }}</dd>
                 
                 <dt class="col-4 text-end">Data Quality</dt>
-                <dd class="col-8"><span class="badge bg-warning">{{ object.get_data_quality_display }}</span></dd>
+                <dd class="col-8"><span class="badge bg-{{ object.data_quality_color_class }}">{{ object.get_data_quality_display }}</span></dd>
                 
                 {% if object.validator %}
                 <dt class="col-4 text-end">Validated</dt>

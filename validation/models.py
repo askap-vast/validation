@@ -87,6 +87,19 @@ class Observation(models.Model):
     def __str__(self):
         return f"{self.field} SB{self.sbid}"
 
+    @property
+    def data_quality_color_class(self):
+        color_class = "primary"
+        if self.data_quality == self.ValidationState.REJECTED:
+            color_class = "danger"
+        elif self.data_quality == self.ValidationState.UNCERTAIN:
+            color_class = "secondary"
+        elif self.data_quality == self.ValidationState.GOOD:
+            color_class = "success"
+        elif self.data_quality == self.ValidationState.NOT_VALIDATED:
+            color_class = "warning"
+        return color_class
+
 
 class ReferenceCatalog(models.Model):
     """A reference catalog that can be crossmatched to a VAST Observation catalogs."""

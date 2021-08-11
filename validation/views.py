@@ -42,10 +42,23 @@ class ObservationDetailView(DetailView):
         context["crossmatch_plots"] = crossmatch_plots
 
         psf_plot_script, psf_plot_divs = components(
-            make_psf_plot(observation, min_data_range=2, plot_width=200, plot_height=200)
+            make_psf_plot(
+                observation, min_data_range=2, plot_width=200, plot_height=200
+            )
         )
         context["psf_plot"] = {
             "script": psf_plot_script,
             "divs": psf_plot_divs,
         }
+        return context
+
+
+class PendingValidationListView(ObservationListView):
+    queryset = Observation.objects.filter(
+        data_quality=Observation.ValidationState.NOT_VALIDATED
+    )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Pending Validation List"
         return context
