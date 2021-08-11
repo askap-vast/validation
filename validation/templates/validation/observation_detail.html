@@ -1,9 +1,11 @@
 {% extends 'validation/base.html' %}
+{% load static %}
 {% load tz %}
 {% load validation_extras %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />
+<link rel="stylesheet" href="{% static 'validation/style.css' %}" />
 {% endblock extra_head %}
 
 {% block content %}
@@ -62,7 +64,7 @@
                 <dd class="col-8">{{ object.ingested_datetime|utc }}</dd>
               </dl>
             </div>
-            <div class="col-xl-6">
+            <div class="col-xl-6 bokeh-center">
               {{ psf_plot.divs|safe }}
               {{ psf_plot.script|safe }}
             </div>
