@@ -18,6 +18,8 @@
 <body>
 
 {% block navbar %}
+{% url 'pending-list' as url_pending_list %}
+{% url 'observation-list' as url_observation_list %}
 <header>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5 p-3">
     <div class="container-fluid">
@@ -28,13 +30,13 @@
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
+            <a class="nav-link" aria-current="page" href="#">Dashboard</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'pending-list' %}">Pending</a>
+            <a class="nav-link{% if request.path == url_pending_list %} active{% endif %}" href="{% url 'pending-list' %}">Pending</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'observation-list' %}">Observations</a>
+            <a class="nav-link{% if request.path == url_observation_list %} active{% endif %}" href="{% url 'observation-list' %}">Observations</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#">Epochs</a>
