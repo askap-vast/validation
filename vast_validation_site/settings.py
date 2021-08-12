@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Tuple
 import environ
 
 env = environ.Env()
@@ -164,3 +164,12 @@ STATIC_ROOT = env('STATIC_ROOT', cast=Path, default=BASE_DIR / 'staticfiles')
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Security settings
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER: Optional[Tuple[str, str]] = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+else:
+    SECURE_PROXY_SSL_HEADER = None
+    SECURE_SSL_REDIRECT = False
