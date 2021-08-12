@@ -195,7 +195,7 @@ bcrypt = ["bcrypt"]
 name = "django-debug-toolbar"
 version = "3.2.1"
 description = "A configurable set of panels that display various debug information about the current request/response."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -762,7 +762,7 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "601a9628b5ce1995b29f94ee92c56b0ea2fff13f47b0e502e6418fae514073f0"
+content-hash = "57b108007d40843f09057eb82d492cd1418377b2202244364e728b970692efad"
 
 [metadata.files]
 appdirs = [
