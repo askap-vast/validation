@@ -21,8 +21,7 @@ environ.Env.read_env()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # VAST surveys validation data directory, i.e. contains the EPOCHXX dirs
-# TODO move to an env var
-VALIDATION_DIR = BASE_DIR / "data/validation"
+VALIDATION_DIR = env('VALIDATION_DIR', cast=Path, default=BASE_DIR / "data/validation")
 
 # Path to directory to store data products pending ingestion
 INGEST_DIR = VALIDATION_DIR / "pending-ingest"
