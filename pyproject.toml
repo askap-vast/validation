@@ -4,6 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["Andrew O'Brien <obrienan@uwm.edu>"]
 license = "MIT"
+packages = [
+    { include = "validation" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -13,6 +16,7 @@ astropy = "^4.3.post1"
 bokeh = "^2.3.3"
 social-auth-app-django = "^5.0.0"
 django-environ = "^0.4.5"
+whitenoise = "^5.3.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
