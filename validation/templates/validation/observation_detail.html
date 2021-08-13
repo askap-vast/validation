@@ -115,13 +115,20 @@
   </section>
 
   <div class="fixed-bottom">
-    <div class="btn-group-vertical float-end m-3" role="group" aria-label="Validation buttons">
-      <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#validationFormModal"
-        data-bs-quality="G" title="Good"><i class="bi bi-check-lg"></i></button>
-      <button type="button" class="btn btn-dark btn-lg" data-bs-toggle="modal" data-bs-target="#validationFormModal"
-        data-bs-quality="U" title="Uncertain"><i class="bi bi-question-lg"></i></button>
-      <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#validationFormModal"
-        data-bs-quality="R" title="Rejected"><i class="bi bi-x-lg"></i></button>
+    <div class="btn-toolbar btn-group-vertical float-end m-3" role="toolbar">
+      {% if object.get_carta_url %}
+      <div class="btn-group-vertical mb-1" role="group" aria-label="Validation buttons">
+        <a href="{{ object.get_carta_url }}" target="_blank" role="button" class="btn btn-primary btn-lg" title="Open image in CARTA"><i class="bi bi-display"></i></a>
+      </div>
+      {% endif %}
+      <div class="btn-group-vertical" role="group" aria-label="Validation buttons">
+        <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#validationFormModal"
+          data-bs-quality="G" title="Good"><i class="bi bi-check-lg"></i></button>
+        <button type="button" class="btn btn-dark btn-lg" data-bs-toggle="modal" data-bs-target="#validationFormModal"
+          data-bs-quality="U" title="Uncertain"><i class="bi bi-question-lg"></i></button>
+        <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#validationFormModal"
+          data-bs-quality="R" title="Rejected"><i class="bi bi-x-lg"></i></button>
+      </div>
     </div>
   </div>
 

@@ -20,8 +20,11 @@ environ.Env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# VAST surveys validation data directory, i.e. contains the EPOCHXX dirs
-VALIDATION_DIR = env('VALIDATION_DIR', cast=Path, default=BASE_DIR / "data/validation")
+# VAST survey data directory
+SURVEY_DATA_DIR = env('SURVEY_DATA_DIR', cast=Path)
+
+# Validation data directory. Should be a descendant of SURVEY_DATA_PATH.
+VALIDATION_DIR = SURVEY_DATA_DIR / "validation"
 
 # Path to directory to store data products pending ingestion
 INGEST_DIR = VALIDATION_DIR / "pending-ingest"
@@ -170,3 +173,8 @@ if not DEBUG:
 else:
     SECURE_PROXY_SSL_HEADER = None
     SECURE_SSL_REDIRECT = False
+
+# CARTA FITS viewer settings (optional)
+# The image paths for each Observation object are assumed to be accessible at the same
+# path by the CARTA viewer.
+CARTA_URL = env('CARTA_URL', default=None)

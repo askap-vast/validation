@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Optional
+from urllib.parse import urlencode, urlsplit, urlunsplit, SplitResult
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -105,17 +108,49 @@ class Observation(models.Model):
     def get_absolute_url(self):
         return reverse("observation-detail", kwargs={"pk": self.pk})
 
+    def get_carta_url(self) -> Optional[str]:
+        url = None
+        if settings.CARTA_URL is not None:
+            image_path = Path(self.image_path)
+            query = {
+                "folder": str(image_path.parent),
+                "file": image_path.name,
+            }
+            url_parts = urlsplit(settings.CARTA_URL)
+            url_query = (
+                urlencode(query)
+                if url_parts.query == ""
+                else f"{url_parts.query}&{urlencode(query)}"
+            )
+            url_path = "/" if url_parts.path == "" else url_parts.path
+            url_parts = SplitResult(
+                url_parts.scheme,
+                url_parts.netloc,
+                url_path,
+                url_query,
+                url_parts.fragment,
+            )
+            url = urlunsplit(url_parts)
+        return url
+
 
 class ReferenceCatalog(models.Model):
     """A reference catalog that can be crossmatched to a VAST Observation catalogs."""
+
     name = models.CharField(primary_key=True, max_length=25)
-    frequency_MHz = models.FloatField(help_text="Frequency in MHz", null=True, blank=True)
+    frequency_MHz = models.FloatField(
+        help_text="Frequency in MHz", null=True, blank=True
+    )
 
     class Meta:
-        ordering = ["name", ]
+        ordering = [
+            "name",
+        ]
 
     def __str__(self):
-        freq_str = f" ({self.frequency_MHz:.0f} MHz)" if self.frequency_MHz is not None else ""
+        freq_str = (
+            f" ({self.frequency_MHz:.0f} MHz)" if self.frequency_MHz is not None else ""
+        )
         return f"{self.name}{freq_str}"
 
 
