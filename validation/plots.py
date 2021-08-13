@@ -67,14 +67,13 @@ def _make_astrometry_plot(
     # if a pixel size is given, make sure the data range is set to always include it
     if pixel_size:
         max_offset = max(max_offset, *[x / 2 for x in pixel_size])
-    data_range = _padded_data_range(-max_offset, max_offset)
 
     fig_pos = figure(
         frame_width=plot_width,
         frame_height=plot_height,
         toolbar_location="above",
-        x_range=data_range,
-        y_range=data_range,
+        x_range=_padded_data_range(-max_offset, max_offset),
+        y_range=_padded_data_range(-max_offset, max_offset),
         x_axis_label="RA offset (arcsec)",
         y_axis_label="Dec offset (arcsec)",
         tools=DEFAULT_TOOLS,
