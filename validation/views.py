@@ -37,6 +37,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         context = super().get_context_data(**kwargs)
         context["observation_validation_counts"] = count_by_quality
+        context["page_title"] = "VAST Validation - Dashboard"
         return context
 
 
@@ -50,6 +51,7 @@ class ObservationListView(LoginRequiredMixin, ListView):
         context["page_range"] = page.paginator.get_elided_page_range(
             page.number, on_ends=1, on_each_side=1
         )
+        context["page_title"] = "VAST Validation - Observations"
         return context
 
 
@@ -85,6 +87,7 @@ class ObservationDetailView(LoginRequiredMixin, UpdateView):
             "script": psf_plot_script,
             "divs": psf_plot_divs,
         }
+        context["page_title"] = f"VAST Validation - {observation.field.name} - SB{observation.sbid}"
         return context
 
     def form_valid(self, form):
@@ -115,4 +118,5 @@ class PendingValidationListView(ObservationListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Pending Validation List"
+        context["page_title"] = "VAST Validation - Pending"
         return context
