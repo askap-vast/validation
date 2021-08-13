@@ -114,8 +114,8 @@
     {% endfor %}
   </section>
 
-  <div class="fixed-bottom">
-    <div class="btn-toolbar btn-group-vertical float-end m-3" role="toolbar">
+  <div class="fixed-bottom pe-none">
+    <div class="btn-toolbar btn-group-vertical float-end m-3 pe-auto" role="toolbar">
       {% if object.get_carta_url %}
       <div class="btn-group-vertical mb-1" role="group" aria-label="Validation buttons">
         <a href="{{ object.get_carta_url }}" target="vast-carta-viewer" role="button" class="btn btn-primary btn-lg" title="Open image in CARTA"><i class="bi bi-display"></i></a>
