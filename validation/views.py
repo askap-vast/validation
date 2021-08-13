@@ -2,9 +2,10 @@ from typing import Any, Dict
 from bokeh.embed import components
 import bokeh.resources
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, Sum
 from django.shortcuts import render
 from django.urls import reverse
-from django.views.generic import ListView
+from django.views.generic import ListView, TemplateView
 from django.views.generic.edit import UpdateView
 from validation.forms import ValidationForm
 from validation.models import Observation
@@ -13,6 +14,30 @@ from validation.plots import make_crossmatch_plots, make_psf_plot
 
 def login(request):
     return render(request, "validation/login.html")
+
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = "validation/dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        # count the number of observations grouped by data quality
+        # the .order_by() is required to clear the fields automatically added due to the
+        # Observation.Meta.ordering setting.
+        count_by_quality = (
+            Observation.objects.order_by()
+            .values("data_quality")
+            .annotate(count=Count("pk"))
+        )
+        total_observations = count_by_quality.aggregate(total=Sum("count"))
+
+        # add the display colors and fractions
+        for result in count_by_quality:
+            result["color"] = Observation.ValidationState.get_color_class(result["data_quality"])
+            result["percentage"] = int(round(result["count"] / total_observations["total"] * 100))
+
+        context = super().get_context_data(**kwargs)
+        context["observation_validation_counts"] = count_by_quality
+        return context
 
 
 class ObservationListView(LoginRequiredMixin, ListView):

@@ -42,6 +42,19 @@ class Observation(models.Model):
         UNCERTAIN = "U"
         REJECTED = "R"
 
+        @classmethod
+        def get_color_class(cls, validation_state):
+            color_class = "primary"
+            if validation_state == cls.REJECTED:
+                color_class = "danger"
+            elif validation_state == cls.UNCERTAIN:
+                color_class = "dark"
+            elif validation_state == cls.GOOD:
+                color_class = "success"
+            elif validation_state == cls.NOT_VALIDATED:
+                color_class = "warning"
+            return color_class
+
     sbid = models.PositiveIntegerField()
     calibration_sbid = models.PositiveIntegerField(null=True, blank=True, default=None)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
@@ -94,16 +107,7 @@ class Observation(models.Model):
 
     @property
     def data_quality_color_class(self):
-        color_class = "primary"
-        if self.data_quality == self.ValidationState.REJECTED:
-            color_class = "danger"
-        elif self.data_quality == self.ValidationState.UNCERTAIN:
-            color_class = "dark"
-        elif self.data_quality == self.ValidationState.GOOD:
-            color_class = "success"
-        elif self.data_quality == self.ValidationState.NOT_VALIDATED:
-            color_class = "warning"
-        return color_class
+        return Observation.ValidationState.get_color_class(self.data_quality)
 
     def get_absolute_url(self):
         return reverse("observation-detail", kwargs={"pk": self.pk})

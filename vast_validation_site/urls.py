@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from validation.views import (
+    DashboardView,
     ObservationListView,
     ObservationDetailView,
     PendingValidationListView,
@@ -26,7 +27,8 @@ import debug_toolbar
 
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("", DashboardView.as_view()),
+    path("dashboard/", DashboardView.as_view(), name="dashboard"),
     path("observations/", ObservationListView.as_view(), name="observation-list"),
     path(
         "observations/<int:pk>/",
@@ -36,6 +38,7 @@ urlpatterns = [
     path("pending/", PendingValidationListView.as_view(), name="pending-list"),
     path("login/", login, name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("admin/", admin.site.urls),
     path("social-auth/", include("social_django.urls", namespace="social")),
     path("__debug__/", include(debug_toolbar.urls)),
 ]
