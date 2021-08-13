@@ -51,6 +51,9 @@
             {{ user.username }}
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
+            {% if user.is_staff %}
+            <li><a class="dropdown-item" href="{% url 'admin:index' %}">Django Admin</a></li>
+            {% endif %}
             <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
           </ul>
           {% else %}
