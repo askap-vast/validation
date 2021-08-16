@@ -51,14 +51,6 @@ def _make_astrometry_plot(
     plot_width: int = 400,
     plot_height: int = 400,
 ) -> Figure:
-    coords_vast = SkyCoord(ra=source.data["RA"], dec=source.data["DEC"], unit="deg")
-    coords_racs = SkyCoord(
-        ra=source.data["RA_comp"], dec=source.data["DEC_comp"], unit="deg"
-    )
-    dra, ddec = coords_vast.spherical_offsets_to(coords_racs)
-    source.data["dra_arcsec"] = dra.arcsec
-    source.data["ddec_arcsec"] = ddec.arcsec
-
     # set the data range such that (0, 0) is centered and the aspect ratio is 1
     max_offset = max(
         abs(min(source.data["dra_arcsec"].min(), source.data["ddec_arcsec"].min())),
@@ -239,9 +231,64 @@ def _make_flux_plot(
     return fig_flux
 
 
-def make_crossmatch_plots(catalog: Crossmatch) -> Tuple[Figure, ...]:
+def _make_sky_plot(
+    source: ColumnDataSource,
+    plot_width: int = 400,
+    plot_height: int = 400,
+) -> Figure:
+    fig_sky = figure(
+        frame_width=plot_width,
+        frame_height=plot_height,
+        toolbar_location="above",
+        x_range=DataRange1d(flipped=True),
+        x_axis_label="RA",
+        y_axis_label="Dec",
+        tools=DEFAULT_TOOLS,
+    )
+    cmap = linear_cmap(
+        "sep_arcsec",
+        Magma256,
+        low=source.data["sep_arcsec"].min(),
+        high=source.data["sep_arcsec"].max(),
+    )
+    fig_sky.dot(x="RA", y="DEC", size=20, color=cmap, source=source)
+
+    # add source count label
+    label_num_sources = Label(
+        text=f"N = {len(source.data['RA'])}",
+        x=plot_width,
+        y=plot_height,
+        x_units="screen",
+        y_units="screen",
+        text_align="right",
+        text_baseline="top",
+        x_offset=-plot_width * 0.05,
+        y_offset=-plot_height * 0.05,
+        background_fill_color="white",
+        background_fill_alpha=0.8,
+        level="overlay",
+    )
+    fig_sky.add_layout(label_num_sources)
+
+    # add colorbar
+    cbar = ColorBar(color_mapper=cmap["transform"], title="Separation (arcsec)")
+    fig_sky.add_layout(cbar, "right")
+
+    return fig_sky
+
+
+def make_crossmatch_plots(
+    catalog: Crossmatch, plot_width: int = 400, plot_height: int = 400
+) -> Tuple[Figure, ...]:
     do_flux_plot = catalog.reference_catalog.frequency_MHz is not None
     df = pd.read_csv(catalog.file_path)
+    # calculate positional offsets
+    coords_vast = SkyCoord(ra=df["RA"], dec=df["DEC"], unit="deg")
+    coords_racs = SkyCoord(ra=df["RA_comp"], dec=df["DEC_comp"], unit="deg")
+    dra, ddec = coords_vast.spherical_offsets_to(coords_racs)
+    df["dra_arcsec"] = dra.arcsec
+    df["ddec_arcsec"] = ddec.arcsec
+    df["sep_arcsec"] = coords_vast.separation(coords_racs).arcsec
     if do_flux_plot:
         df = df.sort_values("ASKAP_flux")
     source = ColumnDataSource(data=df)
@@ -251,14 +298,35 @@ def make_crossmatch_plots(catalog: Crossmatch) -> Tuple[Figure, ...]:
     fits_header = getheader(catalog.observation.image_path)
     pix_ra_arcsec = fits_header["CDELT1"] * 3600
     pix_dec_arcsec = fits_header["CDELT2"] * 3600
+
+    # make positional offset plot
     astrometry_plot = _make_astrometry_plot(
-        source, hue_column=hue_column, pixel_size=(pix_ra_arcsec, pix_dec_arcsec)
+        source,
+        hue_column=hue_column,
+        pixel_size=(pix_ra_arcsec, pix_dec_arcsec),
+        plot_height=plot_height,
+        plot_width=plot_width,
     )
+    # make sky position plot
+    skypos_plot = _make_sky_plot(
+        source,
+        plot_height=plot_height,
+        plot_width=plot_width,
+    )
+    # make flux-flux plot
     if do_flux_plot:
-        flux_plot = _make_flux_plot(source, catalog)
-        return (astrometry_plot, flux_plot)
+        flux_plot = _make_flux_plot(
+            source,
+            catalog,
+            plot_height=plot_height,
+            plot_width=plot_width,
+        )
+        return (skypos_plot, astrometry_plot, flux_plot)
     else:
-        return (astrometry_plot,)
+        return (
+            skypos_plot,
+            astrometry_plot,
+        )
 
 
 def make_psf_plot(

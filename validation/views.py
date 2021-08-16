@@ -32,8 +32,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         # add the display colors and fractions
         for result in count_by_quality:
-            result["color"] = Observation.ValidationState.get_color_class(result["data_quality"])
-            result["percentage"] = int(round(result["count"] / total_observations["total"] * 100))
+            result["color"] = Observation.ValidationState.get_color_class(
+                result["data_quality"]
+            )
+            result["percentage"] = int(
+                round(result["count"] / total_observations["total"] * 100)
+            )
 
         context = super().get_context_data(**kwargs)
         context["observation_validation_counts"] = count_by_quality
@@ -71,7 +75,9 @@ class ObservationDetailView(LoginRequiredMixin, UpdateView):
 
         crossmatch_plots: Dict[str, Dict[str, Any]] = {}
         for crossmatch in observation.crossmatch_set.all():
-            script, divs = components(make_crossmatch_plots(crossmatch))
+            script, divs = components(
+                make_crossmatch_plots(crossmatch, plot_width=300, plot_height=300)
+            )
             crossmatch_plots[crossmatch.reference_catalog] = {
                 "script": script,
                 "divs": divs,
@@ -87,7 +93,9 @@ class ObservationDetailView(LoginRequiredMixin, UpdateView):
             "script": psf_plot_script,
             "divs": psf_plot_divs,
         }
-        context["page_title"] = f"VAST Validation - {observation.field.name} - SB{observation.sbid}"
+        context[
+            "page_title"
+        ] = f"VAST Validation - {observation.field.name} - SB{observation.sbid}"
         return context
 
     def form_valid(self, form):

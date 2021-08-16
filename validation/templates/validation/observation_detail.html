@@ -9,7 +9,7 @@
 
 {% block content %}
 <main>
-  <section class="container d-grid gap-3">
+  <section class="container-fluid d-grid gap-3">
     <!--nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{% url 'observation-list' %}">Observations</a></li>
@@ -91,7 +91,7 @@
     </div> <!-- /row -->
   </section>
 
-  <section class="container mt-3">
+  <section class="container-fluid mt-3">
     <h2>Crossmatches</h2>
     {% for reference_catalog, plots in crossmatch_plots.items %}
     <div class="row">
