@@ -1,4 +1,5 @@
 from pathlib import Path
+from astropy.table import Table
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from validation.models import Observation, Crossmatch, ReferenceCatalog
@@ -26,8 +27,13 @@ class Command(BaseCommand):
                     )
                 )
                 continue  # next catalog
-            # catalog is new, check the naming convention
+            # catalog is new
             else:
+                # check the catalog has data
+                t = Table.read(str(catalog_path))
+                if len(t) == 0:
+                    continue   # next catalog
+                # check the naming convention
                 field, sbid, ref_catalog_name, *_ = catalog_path.name.split(".")
                 sbid = int(sbid[2:])
 
