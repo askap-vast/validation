@@ -1,5 +1,5 @@
 from typing import Optional, Tuple
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from astropy.io.fits import getheader
 from bokeh.palettes import Magma256
 from bokeh.plotting import figure, Figure
@@ -251,7 +251,7 @@ def _make_sky_plot(
         low=source.data["sep_arcsec"].min(),
         high=source.data["sep_arcsec"].max(),
     )
-    fig_sky.dot(x="RA", y="DEC", size=20, color=cmap, source=source)
+    fig_sky.dot(x="RA_wrapped", y="DEC", size=20, color=cmap, source=source)
 
     # add source count label
     label_num_sources = Label(
@@ -289,6 +289,10 @@ def make_crossmatch_plots(
     df["dra_arcsec"] = dra.arcsec
     df["ddec_arcsec"] = ddec.arcsec
     df["sep_arcsec"] = coords_vast.separation(coords_racs).arcsec
+    if df["RA"].max() - df["RA"].min() > 180:
+        df["RA_wrapped"] = coords_vast.ra.wrap_at(Angle("180deg")).deg
+    else:
+        df["RA_wrapped"] = coords_vast.ra.deg
     if do_flux_plot:
         df = df.sort_values("ASKAP_flux")
     source = ColumnDataSource(data=df)
