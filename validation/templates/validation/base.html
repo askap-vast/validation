@@ -39,12 +39,12 @@
           <li class="nav-item">
             <a class="nav-link{% if request.path == url_observation_list %} active{% endif %}" href="{% url 'observation-list' %}">Observations</a>
           </li>
-          <li class="nav-item">
+          <!--li class="nav-item">
             <a class="nav-link" href="#">Epochs</a>
-          </li>
-          <li class="nav-item">
+          </li-->
+          <!--li class="nav-item">
             <a class="nav-link" href="#">Validators</a>
-          </li>
+          </li-->
         </ul>
         <div class="d-flex dropdown">
           {% if user.is_authenticated %}
