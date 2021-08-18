@@ -29,6 +29,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             .annotate(count=Count("pk"))
         )
         total_observations = count_by_quality.aggregate(total=Sum("count"))
+        # sort the results by the order of the choices defined in Observation.ValidationState
+        count_by_quality = sorted(
+            count_by_quality,
+            key=lambda d: Observation.ValidationState.values.index(d["data_quality"]),
+        )
 
         # add the display colors and fractions
         for result in count_by_quality:

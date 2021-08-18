@@ -6,14 +6,24 @@
 <section class="container">
 <h1>{{ title|default:"Dashboard" }}</h1>
 
-<h4>Validation progress</h4>
-<div class="progress" style="height: 5rem;">
-  {% for data_quality_count in observation_validation_counts %}
-  <div class="progress-bar bg-{{ data_quality_count.color }}" role="progressbar" style="width: {{ data_quality_count.percentage }}%">
-    <div>{{ data_quality_count.count }}</div>
-    <div>{{ data_quality_count.percentage }}%</div>
+<div class="card">
+  <h5 class="card-header">Validation progress</h5>
+  <div class="card-body">
+    <div class="progress" style="height: 5rem;">
+      {% for data_quality_count in observation_validation_counts %}
+      <div class="progress-bar bg-{{ data_quality_count.color }}" role="progressbar" style="width: {{ data_quality_count.percentage }}%">
+        <div>{{ data_quality_count.count }}</div>
+        <div>{{ data_quality_count.percentage }}%</div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
-  {% endfor %}
+  <div class="card-footer">
+    <span class="card-link"><div class="dashboard-legend-entry bg-success"></div>Good</span>
+    <span class="card-link"><div class="dashboard-legend-entry bg-dark"></div>Uncertain</span>
+    <span class="card-link"><div class="dashboard-legend-entry bg-danger"></div>Rejected</span>
+    <span class="card-link"><div class="dashboard-legend-entry bg-warning"></div>Not Validated</span>
+  </div>
 </div>
 
 </section>

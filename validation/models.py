@@ -37,10 +37,10 @@ class Observation(models.Model):
     """
 
     class ValidationState(models.TextChoices):
-        NOT_VALIDATED = "N"
         GOOD = "G"
         UNCERTAIN = "U"
         REJECTED = "R"
+        NOT_VALIDATED = "N"
 
         @classmethod
         def get_color_class(cls, validation_state):
