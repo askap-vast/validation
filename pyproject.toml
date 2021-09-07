@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vast-validation"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 authors = ["Andrew O'Brien <obrienan@uwm.edu>"]
 license = "MIT"
@@ -25,6 +25,13 @@ black = "^21.7b0"
 flake8 = "^3.9.2"
 rope = "^0.19.0"
 ipython = "^7.26.0"
+django-stubs = "^1.8.0"
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "vast_validation_site.settings"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

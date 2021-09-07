@@ -1,7 +1,8 @@
+from itertools import cycle
 from typing import Optional, Tuple
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io.fits import getheader
-from bokeh.palettes import Magma256
+from bokeh.palettes import Magma256, Dark2_8
 from bokeh.plotting import figure, Figure
 from bokeh.models import (
     BoxAnnotation,
@@ -15,6 +16,8 @@ from bokeh.models import (
     Whisker,
 )
 from bokeh.transform import log_cmap, linear_cmap
+from django.contrib.auth import get_user_model
+from django.db.models import F
 from django.db.models.functions import Abs
 import pandas as pd
 import numpy as np
@@ -22,6 +25,7 @@ import numpy as np
 from validation.models import Crossmatch, Observation, Field
 
 DEFAULT_TOOLS = ["pan,box_zoom,wheel_zoom,box_select,lasso_select,save,reset"]
+User = get_user_model()
 
 
 def _padded_data_range(
@@ -408,3 +412,79 @@ def make_psf_plot(
     )
     fig_psf.add_layout(cbar, "below")
     return fig_psf
+
+
+def make_user_validation_progress_plot(
+    plot_width: int = 400, plot_height: int = 400
+) -> Figure:
+    validated_observations = (
+        Observation.objects.exclude(
+            data_quality=Observation.ValidationState.NOT_VALIDATED
+        )
+        .exclude(validator=None)
+        .values(
+            "data_quality",
+            username=F("validator__username"),
+            datetime=F("validated_datetime"),
+        )
+    )
+
+    validation_df = pd.DataFrame(validated_observations)
+    counts_df = (
+        validation_df.set_index("datetime")
+        .groupby([pd.Grouper(freq="D"), "username"])
+        .data_quality.count()
+        .reindex(
+            pd.MultiIndex.from_product(
+                [
+                    pd.date_range(
+                        validation_df.datetime.min(),
+                        pd.Timestamp.utcnow(),
+                        freq="D",
+                        normalize=True,
+                    ),
+                    validation_df.username.unique(),
+                ],
+                names=["date", "username"],
+            )
+        )
+        .fillna(0)
+        .groupby(level=1)
+        .cumsum()
+    )
+    counts_df = counts_df.reset_index().set_index("username")
+    total_validated_by_user = (
+        validation_df.groupby("username")
+        .data_quality.count()
+        .sort_values(ascending=False)
+    )
+
+    fig_user_progress = figure(
+        frame_width=plot_width,
+        frame_height=plot_height,
+        toolbar_location="above",
+        x_axis_type="datetime",
+        x_axis_label="Date",
+        x_range=DataRange1d(
+            start=max(counts_df.date.max() - pd.Timedelta("4W"), counts_df.date.min()),
+            end=counts_df.date.max(),
+            bounds="auto",
+        ),
+        y_axis_label="Total validated observations",
+        tools="xpan,xwheel_zoom,reset",
+        title="Total validated observations by user",
+    )
+    fig_user_progress.xaxis[0].formatter.days = ["%b %d"]  # date format e.g. Sep 19
+    usernames = counts_df.index.unique()
+    cmap = {username: color for username, color in zip(usernames, cycle(Dark2_8))}
+    for username in total_validated_by_user.index:
+        df = counts_df.loc[username]
+        fig_user_progress.line(
+            df.date,
+            df.data_quality,
+            line_width=2,
+            color=cmap[username],
+            legend_label=username,
+        )
+    fig_user_progress.legend.location = "bottom_left"
+    return fig_user_progress
