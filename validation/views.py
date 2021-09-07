@@ -11,7 +11,9 @@ from django.views.generic.edit import UpdateView
 from validation.forms import ValidationForm
 from validation.models import Observation
 from validation.plots import (
-    make_crossmatch_plots, make_psf_plot, make_user_validation_progress_plot
+    make_crossmatch_plots,
+    make_psf_plot,
+    make_user_validation_progress_plot,
 )
 
 
@@ -49,7 +51,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         # get the progress plot
         prog_plot_script, prog_plot_divs = components(
-            row(make_user_validation_progress_plot(plot_width=None, plot_height=400))
+            row(
+                make_user_validation_progress_plot(plot_width=None, plot_height=400),
+                sizing_mode="stretch_width",
+            )
         )
 
         context = super().get_context_data(**kwargs)
