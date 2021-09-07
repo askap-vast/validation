@@ -5,9 +5,9 @@
 <main>
 <section class="container">
 <h1>{{ title|default:"Dashboard" }}</h1>
-
+<div class="row">
 <div class="card">
-  <h5 class="card-header">Validation progress</h5>
+  <h5 class="card-header">Data Quality Summary</h5>
   <div class="card-body">
     <div class="progress" style="height: 5rem;">
       {% for data_quality_count in observation_validation_counts %}
@@ -25,7 +25,25 @@
     <span class="card-link"><div class="dashboard-legend-entry bg-warning"></div>Not Validated</span>
   </div>
 </div>
+</div>
+<div class="row mt-3">
+<div class="card">
+  <h5 class="card-header">Validation Progress</h5>
+  <div class="card-body">
+    <div>
+      {{ prog_plot.divs|safe }}
+      {{ prog_plot.script|safe }}
+    </div>
+  </div>
+</div>
+</div>
 
 </section>
 </main>
 {% endblock content %}
+
+{% block extra_script %}
+<!-- BokehJS -->
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-{{ bokeh_version|safe }}.min.js"
+  integrity="sha384-{{ bokeh_sri_hash|safe }}" crossorigin="anonymous"></script>
+{% endblock extra_script %}

@@ -1,5 +1,6 @@
 from typing import Any, Dict
 from bokeh.embed import components
+from bokeh.layouts import row
 import bokeh.resources
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Sum
@@ -9,7 +10,9 @@ from django.views.generic import ListView, TemplateView
 from django.views.generic.edit import UpdateView
 from validation.forms import ValidationForm
 from validation.models import Observation
-from validation.plots import make_crossmatch_plots, make_psf_plot
+from validation.plots import (
+    make_crossmatch_plots, make_psf_plot, make_user_validation_progress_plot
+)
 
 
 def login(request):
@@ -44,9 +47,23 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 round(result["count"] / total_observations["total"] * 100)
             )
 
+        # get the progress plot
+        prog_plot_script, prog_plot_divs = components(
+            row(make_user_validation_progress_plot(plot_width=None, plot_height=400))
+        )
+
         context = super().get_context_data(**kwargs)
         context["observation_validation_counts"] = count_by_quality
         context["page_title"] = "VAST Validation - Dashboard"
+        bokeh_version = bokeh.resources.__version__
+        context["bokeh_version"] = bokeh_version
+        context["bokeh_sri_hash"] = bokeh.resources.get_sri_hashes_for_version(
+            bokeh_version
+        )[f"bokeh-{bokeh_version}.min.js"]
+        context["prog_plot"] = {
+            "script": prog_plot_script,
+            "divs": prog_plot_divs,
+        }
         return context
 
 
