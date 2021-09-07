@@ -464,12 +464,15 @@ def make_user_validation_progress_plot(
         frame_height=plot_height,
         toolbar_location="above",
         x_axis_type="datetime",
+        x_axis_label="Date",
         x_range=DataRange1d(
             start=max(counts_df.date.max() - pd.Timedelta("4W"), counts_df.date.min()),
             end=counts_df.date.max(),
             bounds="auto",
         ),
+        y_axis_label="Total validated observations",
         tools="xpan,xwheel_zoom,reset",
+        title="Total validated observations by user",
     )
     fig_user_progress.xaxis[0].formatter.days = ["%b %d"]  # date format e.g. Sep 19
     usernames = counts_df.index.unique()
