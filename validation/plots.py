@@ -483,5 +483,5 @@ def make_user_validation_progress_plot(
             color=cmap[username],
             legend_label=username,
         )
-    fig_user_progress.legend.location = "right"
+    fig_user_progress.legend.location = "bottom_left"
     return fig_user_progress
