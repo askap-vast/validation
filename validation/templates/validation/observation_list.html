@@ -2,9 +2,42 @@
 {% load tz %}
 {% load validation_extras %}
 {% block content %}
+{% url 'pending-list-all' as url_pending_list_all %}
 <main>
 <section class="container">
-<h1>{{ title|default:"Observation List" }}</h1>
+<div class="d-flex justify-content-between">
+  <h1>{{ title|default:"Observation List" }}</h1>
+  {% if user_pending_count is not None %}
+  <ul class="nav nav-pills">
+    <li class="nav-item">
+      <a class="nav-link disabled">Assigned to:</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link{% if request.path == url_pending_list_all %} active{% endif %}" href="{% url 'pending-list-all' %}">Anyone</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link{% if request.path != url_pending_list_all %} active{% endif %} position-relative" href="{% url 'pending-list-me' %}">
+        Me
+        {% if user_pending_count > 0 %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          {{ user_pending_count }}
+          <span class="visually-hidden">pending observations</span>
+        </span>
+        {% endif %}
+      </a>
+    </li>
+  </ul>
+  {% endif %}
+</div>
+
+
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }}" role="alert">
+  {{ message }}
+</div>
+{% endfor %}
+{% endif %}
 
 <table class="table">
   <thead>
@@ -15,6 +48,7 @@
       <th scope="col">Date (UTC)</th>
       <th scope="col">Duration</th>
       <th scope="col">Epoch</th>
+      <th scope="col">Assigned</th>
       <th scope="col">Quality</th>
     </tr>
   </thead>
@@ -27,6 +61,7 @@
       <td>{{ observation.start_datetime|utc }}</td>
       <td>{{ observation.duration|duration_mins }}</td>
       <td>{{ observation.epoch }}</td>
+      <td>{{ observation.assigned_validator.username|default:"" }}</td>
       <td><a href="{% url 'observation-detail' observation.id %}"><span class="badge bg-{{ observation.data_quality_color_class }}">{{ observation.get_data_quality_display }}</span></a></td>
     </tr>
     {% empty %}

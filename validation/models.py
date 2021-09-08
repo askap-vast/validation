@@ -82,7 +82,20 @@ class Observation(models.Model):
         default=ValidationState.NOT_VALIDATED,
     )
     validator = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True, default=None
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        related_name="validated_observations",
+    )
+    assigned_validator = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        related_name="assigned_observations",
     )
     start_datetime = models.DateTimeField()
     duration = models.DurationField()

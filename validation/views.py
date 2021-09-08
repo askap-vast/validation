@@ -3,6 +3,7 @@ from bokeh.embed import components
 from bokeh.layouts import row
 import bokeh.resources
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 from django.db.models import Count, Sum
 from django.shortcuts import render
 from django.urls import reverse
@@ -86,6 +87,28 @@ class ObservationListView(LoginRequiredMixin, ListView):
         return context
 
 
+class PendingValidationListView(ObservationListView):
+    queryset = Observation.objects.filter(
+        data_quality=Observation.ValidationState.NOT_VALIDATED
+    )
+    ordering = "start_datetime"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Pending Validation List"
+        context["page_title"] = "VAST Validation - Pending"
+
+        context["user_pending_count"] = (
+            self.get_queryset().filter(assigned_validator=self.request.user).count()
+        )
+        return context
+
+
+class PendingValidationAssignedListView(PendingValidationListView):
+    def get_queryset(self):
+        return super().get_queryset().filter(assigned_validator=self.request.user)
+
+
 class ObservationDetailView(LoginRequiredMixin, UpdateView):
     model = Observation
     form_class = ValidationForm
@@ -132,26 +155,19 @@ class ObservationDetailView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         next_observation = (
             Observation.objects.filter(
-                data_quality=Observation.ValidationState.NOT_VALIDATED
+                data_quality=Observation.ValidationState.NOT_VALIDATED,
+                assigned_validator=self.request.user,
             )
             .order_by("start_datetime")
             .first()
         )
         if next_observation is None:
-            url = reverse("pending-list")
+            url = reverse("pending-list-all")
+            messages.success(
+                self.request,
+                "Well done! You have finished validating all pending observations that"
+                " were assigned to you.",
+            )
         else:
             url = next_observation.get_absolute_url()
         return url
-
-
-class PendingValidationListView(ObservationListView):
-    queryset = Observation.objects.filter(
-        data_quality=Observation.ValidationState.NOT_VALIDATED
-    )
-    ordering = "start_datetime"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Pending Validation List"
-        context["page_title"] = "VAST Validation - Pending"
-        return context
