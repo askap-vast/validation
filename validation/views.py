@@ -25,6 +25,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "validation/dashboard.html"
 
     def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
         # count the number of observations grouped by data quality
         # the .order_by() is required to clear the fields automatically added due to the
         # Observation.Meta.ordering setting.
@@ -55,9 +57,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 make_user_validation_progress_plot(plot_width=None, plot_height=400),
                 sizing_mode="stretch_width",
             )
-        )
+        ) if len(count_by_quality) > 0 else "No observations in database.", ""
 
-        context = super().get_context_data(**kwargs)
         context["observation_validation_counts"] = count_by_quality
         context["page_title"] = "VAST Validation - Dashboard"
         bokeh_version = bokeh.resources.__version__
