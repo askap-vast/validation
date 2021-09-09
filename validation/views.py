@@ -52,12 +52,22 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )
 
         # get the progress plot
-        prog_plot_script, prog_plot_divs = components(
-            row(
-                make_user_validation_progress_plot(plot_width=None, plot_height=400),
-                sizing_mode="stretch_width",
+        num_validated = Observation.objects.exclude(
+            data_quality=Observation.ValidationState.NOT_VALIDATED
+        ).count()
+        prog_plot_script, prog_plot_divs = (
+            components(
+                row(
+                    make_user_validation_progress_plot(
+                        plot_width=None, plot_height=400
+                    ),
+                    sizing_mode="stretch_width",
+                )
             )
-        ) if len(count_by_quality) > 0 else "No observations in database.", ""
+            if num_validated > 0
+            else "No observations in database.",
+            "",
+        )
 
         context["observation_validation_counts"] = count_by_quality
         context["page_title"] = "VAST Validation - Dashboard"
