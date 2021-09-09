@@ -20,20 +20,27 @@ environ.Env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# VAST survey data directory
-SURVEY_DATA_DIR = env('SURVEY_DATA_DIR', cast=Path)
+# Root directory containing survey data and release data
+_DATA_ROOT = env('SURVEY_DATA_DIR', cast=Path)
+
+# Main VAST survey data directories
+IMAGE_DATA_DIR = _DATA_ROOT / "vast-data/TILES/STOKESI_IMAGES"
+CATALOG_DATA_DIR = _DATA_ROOT / "vast-data/TILES/STOKESI_SELAVY"
+
+# Release data directory
+RELEASE_DATA_DIR = _DATA_ROOT / "release"
 
 # Validation data directory. Should be a descendant of SURVEY_DATA_PATH.
-VALIDATION_DIR = SURVEY_DATA_DIR / "validation"
+# VALIDATION_DIR = SURVEY_DATA_DIR / "validation"
 
 # Path to directory to store data products pending ingestion
-INGEST_DIR = VALIDATION_DIR / "pending-ingest"
+# INGEST_DIR = VALIDATION_DIR / "pending-ingest"
 
 # Path to directory to store data products that have not been assigned an epoch
-UNASSIGNED_DIR = VALIDATION_DIR / "unassigned"
+# UNASSIGNED_DIR = VALIDATION_DIR / "unassigned"
 
 # Path to directory to store crossmatch CSV files
-CROSSMATCH_DIR = VALIDATION_DIR / "crossmatches"
+CROSSMATCH_DIR = _DATA_ROOT / "vast-data/TILES/STOKESI_CROSSMATCHES"
 
 
 # Quick-start development settings - unsuitable for production

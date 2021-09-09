@@ -59,19 +59,19 @@ class Observation(models.Model):
     calibration_sbid = models.PositiveIntegerField(null=True, blank=True, default=None)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     image_path = models.FilePathField(
-        path=str(settings.VALIDATION_DIR.resolve()),
+        path=str(settings.IMAGE_DATA_DIR.resolve()),
         match=r".*\.fits$",
         recursive=True,
         max_length=200,
     )
     components_path = models.FilePathField(
-        path=str(settings.VALIDATION_DIR.resolve()),
+        path=str(settings.CATALOG_DATA_DIR.resolve()),
         match=r".*\.(xml|txt)$",
         recursive=True,
         max_length=200,
     )
     islands_path = models.FilePathField(
-        path=str(settings.VALIDATION_DIR.resolve()),
+        path=str(settings.CATALOG_DATA_DIR.resolve()),
         match=r".*\.(xml|txt)$",
         recursive=True,
         max_length=200,

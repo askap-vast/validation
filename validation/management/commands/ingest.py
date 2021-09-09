@@ -16,30 +16,28 @@ ASKAP_ANT01_LOCATION = EarthLocation.from_geodetic(116.631424, -26.697000, 360.9
 
 class Command(BaseCommand):
     help = (
-        "Looks for new images in the ingest directory and adds them to the database"
-        " along with their catalogs. The data products MUST be named according to the"
-        " VAST naming convention, e.g. contain the field name in the form of"
-        " 'VAST_0012-06A' and the SBID in the form of 'SB12345'."
+        "Looks for new images and adds them to the databasea long with their catalogs."
+        " The data products MUST be named according to the VAST naming convention, e.g."
+        " contain the field name in the form of 'VAST_0012-06A' and the SBID in the"
+        " form of 'SB12345'."
     )
 
     def handle(self, *args, **kwargs):
-        data_path: Path = settings.INGEST_DIR
-        pending_image_paths = data_path.glob("*.fits")
+        image_root_path: Path = settings.IMAGE_DATA_DIR
+        catalog_root_path: Path = settings.CATALOG_DATA_DIR
+        image_paths = image_root_path.glob("**/*.fits")
         seen_images = [
             Path(path).name
             for path in Observation.objects.all().values_list("image_path", flat=True)
         ]
-        # create the unassigned directory if necessary
-        settings.UNASSIGNED_DIR.mkdir(exist_ok=True)
-        for image_path in pending_image_paths:
+        glob_count = 0
+        ingest_count = 0
+        skip_count = 0
+        for image_path in image_paths:
+            glob_count += 1
             # check if the image has been ingested already
             if image_path.name in seen_images:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"An image with the name {image_path.name} has already been"
-                        " ingested. Ignoring."
-                    )
-                )
+                skip_count += 1
                 continue  # next image file
             # image is new, check the naming convention
             else:
@@ -66,9 +64,10 @@ class Command(BaseCommand):
                 else:
                     field = field_match.group(0)
 
+            epoch = image_path.parent.name
             # check if the components file exists under the assumed name
-            components_path = image_path.with_name(
-                f"selavy-{image_path.name}"
+            components_path = (
+                catalog_root_path / epoch / f"selavy-{image_path.name}"
             ).with_suffix(".components.xml")
             if not components_path.exists():
                 self.stdout.write(
@@ -81,8 +80,8 @@ class Command(BaseCommand):
                 continue  # next image file
 
             # check if the islands file exists under the assumed name
-            islands_path = image_path.with_name(
-                f"selavy-{image_path.name}"
+            islands_path = (
+                catalog_root_path / epoch / f"selavy-{image_path.name}"
             ).with_suffix(".islands.xml")
             if not islands_path.exists():
                 self.stdout.write(
@@ -170,20 +169,16 @@ class Command(BaseCommand):
             # VAST_0012-06A.SB11111.RACS.<Observation ID>.csv. Include the observation
             # ID in the rare case of duplicate fields in a SB.
 
-            # now move the data products to the unassigned directory
-            obs.image_path = image_path.rename(
-                settings.UNASSIGNED_DIR / image_path.name
-            ).resolve()
-            obs.components_path = components_path.rename(
-                settings.UNASSIGNED_DIR / components_path.name
-            ).resolve()
-            obs.islands_path = islands_path.rename(
-                settings.UNASSIGNED_DIR / islands_path.name
-            ).resolve()
-            obs.save()
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Data products for {field} SB{sbid} were ingested successfully:"
                     f" {image_path.name}, {components_path.name}, {islands_path.name}."
                 )
             )
+            ingest_count += 1
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"{glob_count} observations were detected. {ingest_count} were"
+                f" ingested, {skip_count} were skipped as they were already ingested."
+            )
+        )
