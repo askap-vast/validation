@@ -1,4 +1,5 @@
 from datetime import timedelta
+from itertools import chain
 from pathlib import Path
 import re
 from typing import List
@@ -6,7 +7,7 @@ from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, ArgumentParser
 from django.conf import settings
 from django.utils.timezone import make_aware, utc
 from validation.models import Observation, Field
@@ -22,10 +23,22 @@ class Command(BaseCommand):
         " form of 'SB12345'."
     )
 
+    def add_arguments(self, parser: ArgumentParser):
+        parser.add_argument("obs_epochs", nargs="*", type=int)
+
     def handle(self, *args, **kwargs):
         image_root_path: Path = settings.IMAGE_DATA_DIR
         catalog_root_path: Path = settings.CATALOG_DATA_DIR
-        image_paths = image_root_path.glob("**/*.fits")
+        # ingest selected epochs, or everything if not given
+        if len(kwargs["obs_epochs"]) > 0:
+            image_paths = chain.from_iterable(
+                [
+                    image_root_path.glob(f"epoch_{obs_epoch}/*.fits")
+                    for obs_epoch in kwargs["obs_epochs"]
+                ]
+            )
+        else:
+            image_paths = image_root_path.glob("**/*.fits")
         seen_images = [
             Path(path).name
             for path in Observation.objects.all().values_list("image_path", flat=True)
