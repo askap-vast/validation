@@ -46,7 +46,7 @@ def change_file_paths(apps, schema_editor):
         else:
             print(f"New islands not found for {obs}: {new_islands_path}")
 
-        obs.save()
+        obs.save(update_fields=["image_path", "components_path", "islands_path"])
 
     for cm in Crossmatch.objects.all():
         sbid = cm.observation.sbid
