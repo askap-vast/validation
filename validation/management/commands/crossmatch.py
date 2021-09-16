@@ -1,6 +1,7 @@
+from itertools import chain
 from pathlib import Path
 from astropy.table import Table
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, ArgumentParser
 from django.conf import settings
 from validation.models import Observation, Crossmatch, ReferenceCatalog
 
@@ -11,13 +12,26 @@ class Command(BaseCommand):
         " new ones to their relevant VAST observation."
     )
 
+    def add_arguments(self, parser: ArgumentParser):
+        parser.add_argument("obs_epochs", nargs="*", type=int)
+
     def handle(self, *args, **kwargs):
         data_path: Path = settings.CROSSMATCH_DIR
+        # ingest selected epochs, or everything if not given
+        if len(kwargs["obs_epochs"]) > 0:
+            catalog_paths = chain.from_iterable(
+                [
+                    data_path.glob(f"epoch_{obs_epoch}/*.csv")
+                    for obs_epoch in kwargs["obs_epochs"]
+                ]
+            )
+        else:
+            catalog_paths = data_path.glob("**/*.csv")
         seen_catalogs = [
             Path(path).name
             for path in Crossmatch.objects.all().values_list("file_path", flat=True)
         ]
-        for catalog_path in data_path.glob("**/*.csv"):
+        for catalog_path in catalog_paths:
             # check if the catalog has been ingested already
             if catalog_path.name in seen_catalogs:
                 self.stdout.write(
