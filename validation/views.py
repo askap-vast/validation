@@ -66,8 +66,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 )
             )
             if num_validated > 0
-            else "No observations in database.",
-            "",
+            else "No validated observations in database."
         )
 
         context["observation_validation_counts"] = count_by_quality

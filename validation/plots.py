@@ -458,6 +458,10 @@ def make_user_validation_progress_plot(
         .data_quality.count()
         .sort_values(ascending=False)
     )
+    x_start = max(counts_df.date.max() - pd.Timedelta("4W"), counts_df.date.min())
+    x_end = counts_df.date.max()
+    if x_start == x_end:
+        x_start -= pd.Timedelta("4W")
 
     fig_user_progress = figure(
         frame_width=plot_width,
@@ -466,8 +470,8 @@ def make_user_validation_progress_plot(
         x_axis_type="datetime",
         x_axis_label="Date",
         x_range=DataRange1d(
-            start=max(counts_df.date.max() - pd.Timedelta("4W"), counts_df.date.min()),
-            end=counts_df.date.max(),
+            start=x_start,
+            end=x_end,
             bounds="auto",
         ),
         y_axis_label="Total validated observations",
