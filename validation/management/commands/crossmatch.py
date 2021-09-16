@@ -17,7 +17,7 @@ class Command(BaseCommand):
             Path(path).name
             for path in Crossmatch.objects.all().values_list("file_path", flat=True)
         ]
-        for catalog_path in data_path.glob("*.csv"):
+        for catalog_path in data_path.glob("**/*.csv"):
             # check if the catalog has been ingested already
             if catalog_path.name in seen_catalogs:
                 self.stdout.write(
