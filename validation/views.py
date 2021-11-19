@@ -2,6 +2,7 @@ from typing import Any, Dict
 from bokeh.embed import components
 from bokeh.layouts import row
 import bokeh.resources
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db.models import Count, Sum
@@ -85,7 +86,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
 class ObservationListView(LoginRequiredMixin, ListView):
     model = Observation
-    paginate_by = 10
+    paginate_by = settings.DEFAULT_PAGINATE_BY
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -173,6 +173,9 @@ STATIC_ROOT = env('STATIC_ROOT', cast=Path, default=BASE_DIR / 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Pagination
+DEFAULT_PAGINATE_BY = 20
+
 # Security settings
 
 if not DEBUG:
