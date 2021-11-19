@@ -40,8 +40,11 @@
                   <dt class="col-4 text-end">Duration</dt>
                   <dd class="col-8">{{ object.duration|duration_mins }}</dd>
 
-                  <dt class="col-4 text-end">Epoch</dt>
-                  <dd class="col-8">{{ object.epoch|default:"Unassigned" }}</dd>
+                  <dt class="col-4 text-end">Obs. Epoch</dt>
+                  <dd class="col-8">{{ object.observation_epoch }}</dd>
+
+                  <dt class="col-4 text-end">Release Epoch</dt>
+                  <dd class="col-8">{{ object.release_epoch|default:"Unassigned" }}</dd>
 
                   <dt class="col-4 text-end">Hour angle</dt>
                   <dd class="col-8">{{ object.hour_angle|floatformat }}</dd>
