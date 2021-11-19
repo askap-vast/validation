@@ -17,10 +17,11 @@ ASKAP_ANT01_LOCATION = EarthLocation.from_geodetic(116.631424, -26.697000, 360.9
 
 class Command(BaseCommand):
     help = (
-        "Looks for new images and adds them to the databasea long with their catalogs."
+        "Looks for new images and adds them to the database along with their catalogs."
         " The data products MUST be named according to the VAST naming convention, e.g."
         " contain the field name in the form of 'VAST_0012-06A' and the SBID in the"
-        " form of 'SB12345'."
+        " form of 'SB12345'. By default, the release epoch will be set to be the same"
+        " as the observation epoch."
     )
 
     def add_arguments(self, parser: ArgumentParser):
@@ -156,7 +157,7 @@ class Command(BaseCommand):
                     "frequency_MHz": frequency_MHz,
                 },
             )
-
+            obs_epoch = int(epoch.split("_")[1])
             obs = Observation(
                 sbid=sbid,
                 field=field_obj,
@@ -165,6 +166,8 @@ class Command(BaseCommand):
                 islands_path=islands_path,
                 start_datetime=make_aware(start_time.datetime, timezone=utc),
                 duration=timedelta(seconds=float(image_header["DURATION"])),
+                observation_epoch=obs_epoch,
+                release_epoch=f"EPOCH{obs_epoch:02d}",
                 imaged_datetime=make_aware(
                     Time(image_header["DATE"]).datetime, timezone=utc
                 ),

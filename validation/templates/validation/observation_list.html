@@ -47,7 +47,7 @@
       <th scope="col">SBID</th>
       <th scope="col">Date (UTC)</th>
       <th scope="col">Duration</th>
-      <th scope="col">Epoch</th>
+      <th scope="col">Release Epoch</th>
       <th scope="col">Assigned</th>
       <th scope="col">Quality</th>
     </tr>
@@ -60,7 +60,7 @@
       <td>{{ observation.sbid }}</td>
       <td>{{ observation.start_datetime|utc }}</td>
       <td>{{ observation.duration|duration_mins }}</td>
-      <td>{{ observation.epoch }}</td>
+      <td>{{ observation.release_epoch }}</td>
       <td>{{ observation.assigned_validator.username|default:"" }}</td>
       <td><a href="{% url 'observation-detail' observation.id %}"><span class="badge bg-{{ observation.data_quality_color_class }}">{{ observation.get_data_quality_display }}</span></a></td>
     </tr>

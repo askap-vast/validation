@@ -55,6 +55,10 @@ class Observation(models.Model):
                 color_class = "warning"
             return color_class
 
+        @classmethod
+        def accepted_states(cls):
+            return (cls.GOOD, cls.UNCERTAIN)
+
     sbid = models.PositiveIntegerField()
     calibration_sbid = models.PositiveIntegerField(null=True, blank=True, default=None)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
@@ -99,7 +103,8 @@ class Observation(models.Model):
     )
     start_datetime = models.DateTimeField()
     duration = models.DurationField()
-    epoch = models.CharField(max_length=9, blank=True, default="")
+    observation_epoch = models.PositiveIntegerField()
+    release_epoch = models.CharField(max_length=9, blank=True, default="")
     imaged_datetime = models.DateTimeField()
     ingested_datetime = models.DateTimeField(auto_now_add=True)
     validated_datetime = models.DateTimeField(auto_now=True)

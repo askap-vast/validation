@@ -175,7 +175,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"
   integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
-{% if object.epoch %}
+{% if object.release_epoch %}
 <!-- Aladin Lite -->
 <script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8">
 </script>
@@ -184,8 +184,8 @@
     fov: 12
   });
   aladin.setImageSurvey(
-    aladin.createImageSurvey("VAST", "VAST Epoch {{ object.epoch|safe }}",
-      "https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST{{ object.epoch }}_I4", "equatorial", 6, {
+    aladin.createImageSurvey("VAST", "VAST Epoch {{ object.release_epoch|safe }}",
+      "https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST{{ object.release_epoch }}_I4", "equatorial", 6, {
         imgFormat: "png"
       })
   );
