@@ -71,6 +71,8 @@ INSTALLED_APPS = [
     'social_django',
     'validation',
     'debug_toolbar',
+    'django_filters',
+    'django.forms',
 ]
 
 MIDDLEWARE = [
@@ -102,6 +104,8 @@ TEMPLATES = [
         },
     },
 ]
+
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 WSGI_APPLICATION = 'vast_validation_site.wsgi.application'
 

@@ -28,7 +28,7 @@ class Field(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.name} - {self.get_frequency_band_display()} band"
+        return f"{self.name}"
 
 
 class Observation(models.Model):

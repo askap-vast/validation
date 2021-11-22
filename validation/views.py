@@ -10,6 +10,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import ListView, TemplateView
 from django.views.generic.edit import UpdateView
+from validation.filters import ObservationFilter
 from validation.forms import ValidationForm
 from validation.models import Observation
 from validation.plots import (
@@ -87,6 +88,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 class ObservationListView(LoginRequiredMixin, ListView):
     model = Observation
     paginate_by = settings.DEFAULT_PAGINATE_BY
+    filterset_class = ObservationFilter
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        self.prefilter_count = queryset.count()
+        self.filterset = self.filterset_class(self.request.GET, queryset=queryset)
+        return self.filterset.qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -95,6 +103,8 @@ class ObservationListView(LoginRequiredMixin, ListView):
             page.number, on_ends=1, on_each_side=1
         )
         context["page_title"] = "VAST Validation - Observations"
+        context["filterset"] = self.filterset
+        context["prefilter_count"] = self.prefilter_count
         return context
 
 
