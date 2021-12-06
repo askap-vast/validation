@@ -13,7 +13,7 @@
       {% for data_quality_count in observation_validation_counts %}
       <div class="progress-bar bg-{{ data_quality_count.color }}" role="progressbar" style="width: {{ data_quality_count.percentage }}%">
         <div>{{ data_quality_count.count }}</div>
-        <div>{{ data_quality_count.percentage }}%</div>
+        <div>{{ data_quality_count.percentage|floatformat:"0" }}%</div>
       </div>
       {% endfor %}
     </div>

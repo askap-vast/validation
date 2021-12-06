@@ -50,8 +50,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             result["color"] = Observation.ValidationState.get_color_class(
                 result["data_quality"]
             )
-            result["percentage"] = int(
-                round(result["count"] / total_observations["total"] * 100)
+            result["percentage"] = round(
+                result["count"] / total_observations["total"] * 100,
+                1
             )
 
         # get the progress plot
