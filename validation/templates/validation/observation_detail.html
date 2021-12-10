@@ -70,6 +70,17 @@
 
                   <dt class="col-4 text-end">Ingested</dt>
                   <dd class="col-8">{{ object.ingested_datetime|utc }}</dd>
+
+                  <dt class="col-4 text-end">Other Epochs</dt>
+                  <dd class="col-8">
+                    <ul class="list-inline">
+                    {% for obs in other_obs %}
+                      <li class="list-inline-item"><a href="{% url 'observation-detail' obs.pk %}">{{ obs.observation_epoch }}</a></li>
+                    {% empty %}
+                    <li class="list-inline-item">None</li>
+                    {% endfor %}
+                    </ul>
+                  </dd>
                 </dl>
               </div>
               <div class="col-xl-6 bokeh-center">

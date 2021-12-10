@@ -51,8 +51,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 result["data_quality"]
             )
             result["percentage"] = round(
-                result["count"] / total_observations["total"] * 100,
-                1
+                result["count"] / total_observations["total"] * 100, 1
             )
 
         # get the progress plot
@@ -168,6 +167,10 @@ class ObservationDetailView(LoginRequiredMixin, UpdateView):
         context[
             "page_title"
         ] = f"VAST Validation - {observation.field.name} - SB{observation.sbid}"
+
+        context["other_obs"] = observation.field.observation_set.exclude(
+            pk=observation.pk
+        ).order_by("observation_epoch")
         return context
 
     def form_valid(self, form):
