@@ -40,7 +40,7 @@
 {% endif %}
 
 {% if user_pending_count is None %}
-<div class="accordion accordion-flush" id="accordionFilters">
+<div class="accordion accordion-flush mb-3" id="accordionFilters">
   <div class="accordion-item">
     <h2 class="accordion-header" id="headingFilters">
       <button class="accordion-button p-3 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="true" aria-controls="collapseFilters">
@@ -169,7 +169,7 @@
 </div>
 
 {% if paginator.count != prefilter_count %}
-<p class="mt-3"><strong>Filter active:</strong> Showing {{ paginator.count }} of {{ prefilter_count }} observations.</p>
+<p class="alert alert-info"><strong>Filter active:</strong> Showing {{ paginator.count }} of {{ prefilter_count }} observations.</p>
 {% endif %}
 
 {% endif %}

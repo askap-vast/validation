@@ -1,11 +1,13 @@
-from typing import Any, Dict
+from itertools import groupby
+from operator import itemgetter
+from typing import Any, Dict, List
 from bokeh.embed import components
 from bokeh.layouts import row
 import bokeh.resources
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.db.models import Count, Sum
+from django.db.models import Count
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import ListView, TemplateView
@@ -30,29 +32,41 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # count the number of observations grouped by data quality
-        # the .order_by() is required to clear the fields automatically added due to the
+        # Count the number of observations grouped by obs epoch and data quality.
+        # The .order_by() is required to clear the fields automatically added due to the
         # Observation.Meta.ordering setting.
-        count_by_quality = (
+        qs = (
             Observation.objects.order_by()
-            .values("data_quality")
+            .values("observation_epoch", "data_quality")
             .annotate(count=Count("pk"))
+            .order_by("-observation_epoch")
         )
-        total_observations = count_by_quality.aggregate(total=Sum("count"))
-        # sort the results by the order of the choices defined in Observation.ValidationState
-        count_by_quality = sorted(
-            count_by_quality,
-            key=lambda d: Observation.ValidationState.values.index(d["data_quality"]),
-        )
-
-        # add the display colors and fractions
-        for result in count_by_quality:
-            result["color"] = Observation.ValidationState.get_color_class(
-                result["data_quality"]
+        count_by_epoch_quality: Dict[int, List[Dict[str, Any]]] = {}
+        for epoch, grouper in groupby(qs, key=itemgetter("observation_epoch")):
+            # sort the results by the order of the choices defined in
+            # Observation.ValidationState
+            count_by_epoch_quality[epoch] = sorted(
+                grouper,
+                key=lambda d: Observation.ValidationState.values.index(d["data_quality"]),
             )
-            result["percentage"] = round(
-                result["count"] / total_observations["total"] * 100, 1
-            )
+            # count total obs in epoch
+            epoch_total_obs: int = sum(d["count"] for d in count_by_epoch_quality[epoch])
+            # add display colors and percentages to each data quality count result
+            for epoch_quality_result in count_by_epoch_quality[epoch]:
+                epoch_quality_result["color"] = Observation.ValidationState.get_color_class(
+                    epoch_quality_result["data_quality"]
+                )
+                epoch_quality_result["percentage"] = round(
+                    epoch_quality_result["count"] / epoch_total_obs * 100, 1
+                )
+        """Example data for count_by_epoch_quality dict. Key is observation_epoch.
+        {
+            1: [
+                {'data_quality': 'N', 'count': 4, 'color': 'yellow', 'percentage': 33},
+                {'data_quality': 'U', 'count': 8, 'color': 'grey', 'percentage': 66},
+            ],
+        }
+        """
 
         # get the progress plot
         num_validated = Observation.objects.exclude(
@@ -71,7 +85,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             else "No validated observations in database."
         )
 
-        context["observation_validation_counts"] = count_by_quality
+        context["validation_count_by_epoch_quality"] = count_by_epoch_quality
         context["page_title"] = "VAST Validation - Dashboard"
         bokeh_version = bokeh.resources.__version__
         context["bokeh_version"] = bokeh_version
