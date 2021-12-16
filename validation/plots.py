@@ -286,6 +286,10 @@ def make_crossmatch_plots(
 ) -> Tuple[Figure, ...]:
     do_flux_plot = catalog.reference_catalog.frequency_MHz is not None
     df = pd.read_csv(catalog.file_path)
+
+    # rename older crossmatch catalogs that used RACS_ prefix instead of ASKAP_
+    df = df.rename(columns={"RACS_flux": "ASKAP_flux"}, errors="ignore")
+
     # calculate positional offsets
     coords_vast = SkyCoord(ra=df["RA"], dec=df["DEC"], unit="deg")
     coords_racs = SkyCoord(ra=df["RA_comp"], dec=df["DEC_comp"], unit="deg")
