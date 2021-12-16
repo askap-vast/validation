@@ -179,6 +179,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Pagination
 DEFAULT_PAGINATE_BY = 20
+DASHBOARD_MAX_DISPLAY_EPOCHS = env('DASHBOARD_MAX_DISPLAY_EPOCHS', cast=int, default=5)
 
 # Security settings
 

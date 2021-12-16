@@ -86,6 +86,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         )
 
         context["validation_count_by_epoch_quality"] = count_by_epoch_quality
+        context["max_display_epochs"] = settings.DASHBOARD_MAX_DISPLAY_EPOCHS
+        context["num_epochs_overflow"] = (
+            len(count_by_epoch_quality) - context["max_display_epochs"]
+        )
         context["page_title"] = "VAST Validation - Dashboard"
         bokeh_version = bokeh.resources.__version__
         context["bokeh_version"] = bokeh_version

@@ -10,18 +10,25 @@
   <h5 class="card-header">Data Quality by Observation Epoch</h5>
   <div class="card-body">
     {% for epoch, data_quality_counts in validation_count_by_epoch_quality.items %}
-    <h6 class="mb-0">Epoch {{ epoch }} <a href="{% url 'observation-list' %}?observation_epoch={{ epoch }}" title="View observation epoch {{ epoch }}"><i class="bi bi-box-arrow-in-down-left"></i></a></h6>
-    <div class="progress mb-1" style="height: 2rem;">
-        {% for data_quality_count in data_quality_counts %}
-          <div class="progress-bar bg-{{ data_quality_count.color }} lh-1" role="progressbar" style="width: {{ data_quality_count.percentage }}%">
-            <div>{{ data_quality_count.count }}</div>
-            <div>{{ data_quality_count.percentage|floatformat:"0" }}%</div>
-          </div>
-        {% endfor %}
+    <div class="row{% if forloop.counter > max_display_epochs %} collapse collapse-epoch{% endif %}">
+      <div class="col-lg-2 my-auto">
+        <h6 class="mb-0">Epoch {{ epoch }} <a href="{% url 'observation-list' %}?observation_epoch={{ epoch }}" title="View observation epoch {{ epoch }}"><i class="bi bi-box-arrow-in-down-left"></i></a></h6>
       </div>
-      {% endfor %}
+      <div class="col">
+        <div class="progress mb-1" style="height: 2rem;">
+          {% for data_quality_count in data_quality_counts %}
+            <div class="progress-bar bg-{{ data_quality_count.color }} lh-1" role="progressbar" style="width: {{ data_quality_count.percentage }}%">
+              <div>{{ data_quality_count.count }}</div>
+              <div>{{ data_quality_count.percentage|floatformat:"0" }}%</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% if num_epochs_overflow > 0 %}<a id="collapseLink" data-bs-toggle="collapse" href=".collapse" role="button" aria-expanded="false">Show {{ num_epochs_overflow }} more</a>{% endif %}
   </div>
-  <div class="card-footer">
+  <div class="card-footer pt-0 pb-3">
     <span class="card-link"><div class="dashboard-legend-entry bg-success"></div>Good</span>
     <span class="card-link"><div class="dashboard-legend-entry bg-dark"></div>Uncertain</span>
     <span class="card-link"><div class="dashboard-legend-entry bg-danger"></div>Rejected</span>
@@ -49,4 +56,11 @@
 <!-- BokehJS -->
 <script src="https://cdn.bokeh.org/bokeh/release/bokeh-{{ bokeh_version|safe }}.min.js"
   integrity="sha384-{{ bokeh_sri_hash|safe }}" crossorigin="anonymous"></script>
+
+<!-- Customize collapsing epoch progress bars -->
+<script type="text/javascript">
+  document.querySelector(".collapse-epoch").addEventListener("show.bs.collapse", event => {
+      var showLink = document.querySelector("#collapseLink").hidden = true
+  })
+</script>
 {% endblock extra_script %}
