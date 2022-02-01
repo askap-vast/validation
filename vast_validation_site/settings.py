@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'django_filters',
     'django.forms',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -149,6 +150,13 @@ SOCIAL_AUTH_GITHUB_TEAM_ID = env('SOCIAL_AUTH_GITHUB_TEAM_ID')
 SOCIAL_AUTH_GITHUB_TEAM_KEY = env('SOCIAL_AUTH_GITHUB_TEAM_KEY')
 SOCIAL_AUTH_GITHUB_TEAM_SECRET = env('SOCIAL_AUTH_GITHUB_TEAM_SECRET')
 SOCIAL_AUTH_GITHUB_TEAM_SCOPE = ['read:org', 'read:user']
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'validation.pagination.LimitOffsetPagination',
+}
 
 
 # Internationalization

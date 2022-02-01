@@ -12,6 +12,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import ListView, TemplateView
 from django.views.generic.edit import UpdateView
+from rest_framework import viewsets
 from validation.filters import ObservationFilter
 from validation.forms import ValidationForm
 from validation.models import Observation
@@ -20,6 +21,7 @@ from validation.plots import (
     make_psf_plot,
     make_user_validation_progress_plot,
 )
+from validation.serializers import ObservationSerializer
 
 
 def login(request):
@@ -214,3 +216,8 @@ class ObservationDetailView(LoginRequiredMixin, UpdateView):
         else:
             url = next_observation.get_absolute_url()
         return url
+
+
+class ObservationViewSet(viewsets.ModelViewSet):
+    queryset = Observation.objects.all()
+    serializer_class = ObservationSerializer
