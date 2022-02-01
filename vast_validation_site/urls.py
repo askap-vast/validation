@@ -30,7 +30,7 @@ import debug_toolbar
 
 
 router = routers.DefaultRouter()
-router.register(r"observations", ObservationViewSet)
+router.register(r"observations", ObservationViewSet, basename="api-observations")
 
 
 urlpatterns = [
