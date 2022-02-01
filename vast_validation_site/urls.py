@@ -16,15 +16,21 @@ Including another URLconf
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
+from rest_framework import routers
 from validation.views import (
     DashboardView,
     ObservationListView,
     ObservationDetailView,
+    ObservationViewSet,
     PendingValidationListView,
     PendingValidationAssignedListView,
     login,
 )
 import debug_toolbar
+
+
+router = routers.DefaultRouter()
+router.register(r"observations", ObservationViewSet)
 
 
 urlpatterns = [
@@ -44,4 +50,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("social-auth/", include("social_django.urls", namespace="social")),
     path("__debug__/", include(debug_toolbar.urls)),
+    path("api/", include(router.urls)),
 ]
