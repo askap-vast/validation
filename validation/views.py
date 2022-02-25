@@ -12,6 +12,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import ListView, TemplateView
 from django.views.generic.edit import UpdateView
+import django_filters.rest_framework
 from rest_framework import viewsets
 from validation.filters import ObservationFilter
 from validation.forms import ValidationForm
@@ -221,3 +222,5 @@ class ObservationDetailView(LoginRequiredMixin, UpdateView):
 class ObservationViewSet(viewsets.ModelViewSet):
     queryset = Observation.objects.all()
     serializer_class = ObservationSerializer
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_class = ObservationFilter
