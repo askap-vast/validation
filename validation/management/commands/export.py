@@ -17,6 +17,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: "CommandParser"):
         parser.add_argument("obs_epochs", nargs="*", type=int)
+        parser.add_argument("proj_code", default="AS207", type=str)
 
     def handle(self, *args, **kwargs):
         observations = Observation.objects.exclude(
@@ -39,6 +40,11 @@ class Command(BaseCommand):
                     " observation epochs."
                 )
             )
-        self.stdout.write("SBID,quality")
+        proj_code = kwargs["proj_code"]
+        self.stdout.write("SBID,Project code,Quality level,Validation notes")
         for obs in observations:
-            self.stdout.write(f"{obs.sbid},{obs.get_data_quality_display().upper()}")
+            quality = obs.get_data_quality_display().upper()
+            sbid = obs.sbid
+            comment = obs.get_validation_comment_display()
+            out_str = f"{sbid},{proj_code},{quality},{comment}"
+            self.stdout.write(out_str)
