@@ -14,10 +14,6 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: ArgumentParser):
         parser.add_argument("obs_epochs", nargs="*", type=int)
-        parser.add_argument("--overwrite",
-                            action="store_true",
-                            help="Overwrite the existing crossmatch catalogues"
-                            )
 
     def handle(self, *args, **kwargs):
         data_path: Path = settings.CROSSMATCH_DIR
@@ -38,28 +34,22 @@ class Command(BaseCommand):
         for catalog_path in catalog_paths:
             # check if the catalog has been ingested already
             if catalog_path.name in seen_catalogs:
-                if kwargs["--overwrite"]:
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"A crossmatch catalog with the name {catalog_path.name} has"
-                            " already been ingested. It will be overwritten."
-                        )
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"A crossmatch catalog with the name {catalog_path.name} has"
+                        " already been ingested. Ignoring."
                     )
-                else:
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"A crossmatch catalog with the name {catalog_path.name} has"
-                            " already been ingested. Ignoring."
-                        )
-                    )
-                    continue  # next catalog
-            # check the catalog has data
-            t = Table.read(str(catalog_path))
-            if len(t) == 0:
-                continue   # next catalog
-            # check the naming convention
-            field, sbid, ref_catalog_name, *_ = catalog_path.name.split(".")
-            sbid = int(sbid[2:])
+                )
+                continue  # next catalog
+            # catalog is new
+            else:
+                # check the catalog has data
+                t = Table.read(str(catalog_path))
+                if len(t) == 0:
+                    continue   # next catalog
+                # check the naming convention
+                field, sbid, ref_catalog_name, *_ = catalog_path.name.split(".")
+                sbid = int(sbid[2:])
 
             # get the observation
             try:
