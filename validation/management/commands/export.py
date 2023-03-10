@@ -17,7 +17,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: "CommandParser"):
         parser.add_argument("obs_epochs", nargs="*", type=int)
-        parser.add_argument("proj_code", default="AS207", type=str)
+        parser.add_argument("--proj_code", default="AS207", type=str)
 
     def handle(self, *args, **kwargs):
         observations = Observation.objects.exclude(
