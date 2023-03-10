@@ -45,6 +45,6 @@ class Command(BaseCommand):
         for obs in observations:
             quality = obs.get_data_quality_display().upper()
             sbid = obs.sbid
-            comment = obs.get_validation_comment_display()
+            comment = obs.validation_comment
             out_str = f"{sbid},{proj_code},{quality},{comment}"
             self.stdout.write(out_str)
