@@ -37,7 +37,14 @@ class Command(BaseCommand):
         parser.add_argument("obs_epochs", nargs="+", type=int)
         parser.add_argument("--ignore-mocs", action="store_true")
         
-    def generate_paths(self, image_path, base_path, stokes, links, ignore_mocs=False):
+    def generate_paths(self,
+                       image_path,
+                       components_path,
+                       islands_path,
+                       base_path,
+                       stokes,
+                       links,
+                       ignore_mocs=False):
         stokes = stokes.upper()
         all_files_exist = True
         
@@ -47,7 +54,7 @@ class Command(BaseCommand):
         
         # RMS map
         rms_path = (
-                Path(obs.image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_RMSMAPS")).parent
+                Path(image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_RMSMAPS")).parent
                 / f"noiseMap.{image_path.name}"
         )
         rms_target = base_path / "STOKES{stokes}_RMSMAPS" / rms_path.name
@@ -55,7 +62,7 @@ class Command(BaseCommand):
         
         # Background map
         background_path = (
-                Path(obs.image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_RMSMAPS")).parent
+                Path(image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_RMSMAPS")).parent
                 / f"meanMap.{image_path.name}"
         )
         background_target = base_path / "STOKES{stokes}_RMSMAPS" / background_path.name
@@ -64,20 +71,20 @@ class Command(BaseCommand):
         )
         
         # Selavy components catalogue
-        components_path = Path(obs.components_path)
+        components_path = Path(components_path)
         components_target = base_path / "STOKES{stokes}_SELAVY" / components_path.name
         all_files_exist = all_files_exist and self._check_path_exists(
             components_path
         )
 
         # Selavy islands catalogue
-        islands_path = Path(obs.islands_path)
+        islands_path = Path(islands_path)
         islands_target = base_path / "STOKES{stokes}_SELAVY" / islands_path.name
         all_files_exist = all_files_exist and self._check_path_exists(islands_path)
         
         # Weights map
         weight_path = Path(
-            obs.image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_WEIGHTS")
+            image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_WEIGHTS")
         ).parent / (
             image_path.name.replace("image", "weights")
             .replace(".restored", "")
@@ -89,7 +96,7 @@ class Command(BaseCommand):
         # Stokes I MOC
         if stokes == "I" and not ignore_mocs:
             moc_path = (
-                Path(obs.image_path.replace("STOKESI_IMAGES", "STOKESI_MOCS")).parent
+                Path(image_path.replace("STOKESI_IMAGES", "STOKESI_MOCS")).parent
                 / image_path.with_suffix(".moc.fits").name
             )
             moc_target = base_path / "STOKESI_MOCS" / moc_path.name
@@ -110,6 +117,16 @@ class Command(BaseCommand):
                 f"One or more data files for doesn't exist. Aborting release."
             )
         
+    def _correct_stokes_path(self, path, stokes):
+        path_str = str(path)
+        path_str = path_str.replace("STOKESI",
+                                    "STOKES{stokes.upper()}"
+                                    )
+        path_str = path_str.replace(".i.",
+                                    ".{stokes.lower()}."
+                                    )
+        return Path(path_str)
+        
     def handle(self, *args, **kwargs):
         # get the observations ready for release
         obs_ready = Observation.objects.exclude(release_epoch="").filter(
@@ -128,20 +145,20 @@ class Command(BaseCommand):
         # prepare links to the data in the release directories
         links: list[tuple[Path, Path]] = []
         for obs in obs_ready:
-            stokes_I_image_path = Path(obs.image_path)
+            stokes_I_image_path = obs.image_path
+            stokes_I_comp_path = obs.components_path
+            stokes_I_isl_path = obs.islands_path
+            
             base_path = settings.RELEASE_DATA_DIR / obs.release_epoch / "TILES"
             
             for stokes in ["I", "V"]:
-                path_str = str(stokes_I_image_path)
-                path_str = path_str.replace("STOKESI",
-                                            "STOKES{stokes.upper()}"
-                                            )
-                path_str = path_str.replace(".i.",
-                                            ".{stokes.lower()}."
-                                            )
-                image_path = Path(path_str)
+                image_path = self.correct_stokes_path(stokes_I_image_path, stokes)
+                components_path = self.correct_stokes_path(stokes_I_comp_path, stokes)
+                islands_path = self.correct_stokes_path(stokes_I_isl_path, stokes)
                 
                 self.generate_paths(image_path,
+                                    components_path,
+                                    islands_path,
                                     base_path,
                                     stokes,
                                     links,
