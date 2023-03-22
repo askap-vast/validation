@@ -54,43 +54,43 @@ class Command(BaseCommand):
         
         # RMS map
         rms_path = (
-                Path(image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_RMSMAPS")).parent
+                Path(image_path.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_RMSMAPS")).parent
                 / f"noiseMap.{image_path.name}"
         )
-        rms_target = base_path / "STOKES{stokes}_RMSMAPS" / rms_path.name
+        rms_target = base_path / f"STOKES{stokes}_RMSMAPS" / rms_path.name
         all_files_exist = all_files_exist and self._check_path_exists(rms_path)  
         
         # Background map
         background_path = (
-                Path(image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_RMSMAPS")).parent
+                Path(image_path.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_RMSMAPS")).parent
                 / f"meanMap.{image_path.name}"
         )
-        background_target = base_path / "STOKES{stokes}_RMSMAPS" / background_path.name
+        background_target = base_path / f"STOKES{stokes}_RMSMAPS" / background_path.name
         all_files_exist = all_files_exist and self._check_path_exists(
             background_path
         )
         
         # Selavy components catalogue
         components_path = Path(components_path)
-        components_target = base_path / "STOKES{stokes}_SELAVY" / components_path.name
+        components_target = base_path / f"STOKES{stokes}_SELAVY" / components_path.name
         all_files_exist = all_files_exist and self._check_path_exists(
             components_path
         )
 
         # Selavy islands catalogue
         islands_path = Path(islands_path)
-        islands_target = base_path / "STOKES{stokes}_SELAVY" / islands_path.name
+        islands_target = base_path / f"STOKES{stokes}_SELAVY" / islands_path.name
         all_files_exist = all_files_exist and self._check_path_exists(islands_path)
         
         # Weights map
         weight_path = Path(
-            image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_WEIGHTS")
+            image_path.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_WEIGHTS")
         ).parent / (
             image_path.name.replace("image", "weights")
             .replace(".restored", "")
             .replace(".conv", "")
         )
-        weight_target = base_path / "STOKES{stokes}_WEIGHTS" / weight_path.name
+        weight_target = base_path / f"STOKES{stokes}_WEIGHTS" / weight_path.name
         all_files_exist = all_files_exist and self._check_path_exists(weight_path)
         
         # Stokes I MOC
@@ -120,10 +120,10 @@ class Command(BaseCommand):
     def _correct_stokes_path(self, path, stokes):
         path_str = str(path)
         path_str = path_str.replace("STOKESI",
-                                    "STOKES{stokes.upper()}"
+                                    f"STOKES{stokes.upper()}"
                                     )
         path_str = path_str.replace(".i.",
-                                    ".{stokes.lower()}."
+                                    f".{stokes.lower()}."
                                     )
         return Path(path_str)
         
