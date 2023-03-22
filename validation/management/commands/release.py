@@ -141,11 +141,12 @@ class Command(BaseCommand):
                                             )
                 image_path = Path(path_str)
                 
-                generate_paths(image_path,
-                               base_path,
-                               stokes,
-                               links,
-                               ignore_mocs=kwargs["ignore_mocs"])
+                self.generate_paths(image_path,
+                                    base_path,
+                                    stokes,
+                                    links,
+                                    ignore_mocs=kwargs["ignore_mocs"]
+                                    )
             
 
         # create the links or print what would be linked if --dry-run was passed
