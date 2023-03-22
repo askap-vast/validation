@@ -47,6 +47,7 @@ class Command(BaseCommand):
                        ignore_mocs=False):
         stokes = stokes.upper()
         all_files_exist = True
+        image_path_str = str(image_path)
         
         # Image
         image_target = base_path / f"STOKES{stokes}_IMAGES" / image_path.name
@@ -54,7 +55,7 @@ class Command(BaseCommand):
         
         # RMS map
         rms_path = (
-                Path(image_path.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_RMSMAPS")).parent
+                Path(image_path_str.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_RMSMAPS")).parent
                 / f"noiseMap.{image_path.name}"
         )
         rms_target = base_path / f"STOKES{stokes}_RMSMAPS" / rms_path.name
@@ -62,7 +63,7 @@ class Command(BaseCommand):
         
         # Background map
         background_path = (
-                Path(image_path.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_RMSMAPS")).parent
+                Path(image_path_str.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_RMSMAPS")).parent
                 / f"meanMap.{image_path.name}"
         )
         background_target = base_path / f"STOKES{stokes}_RMSMAPS" / background_path.name
@@ -84,7 +85,7 @@ class Command(BaseCommand):
         
         # Weights map
         weight_path = Path(
-            image_path.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_WEIGHTS")
+            image_path_str.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_WEIGHTS")
         ).parent / (
             image_path.name.replace("image", "weights")
             .replace(".restored", "")
