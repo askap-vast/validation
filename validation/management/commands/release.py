@@ -35,8 +35,9 @@ class Command(BaseCommand):
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument("--overwrite", action="store_true")
         parser.add_argument("obs_epochs", nargs="+", type=int)
+        parser.add_argument("--ignore-mocs", action="store_true")
         
-    def generate_paths(image_path, base_path, stokes, links):
+    def generate_paths(image_path, base_path, stokes, links, ignore_mocs=False):
         stokes = stokes.upper()
         all_files_exist = True
         
@@ -86,7 +87,7 @@ class Command(BaseCommand):
         all_files_exist = all_files_exist and self._check_path_exists(weight_path)
         
         # Stokes I MOC
-        if stokes == "I":
+        if stokes == "I" and not ignore_mocs:
             moc_path = (
                 Path(obs.image_path.replace("STOKESI_IMAGES", "STOKESI_MOCS")).parent
                 / image_path.with_suffix(".moc.fits").name
@@ -140,7 +141,11 @@ class Command(BaseCommand):
                                             )
                 image_path = Path(path_str)
                 
-                generate_paths(image_path, base_path, stokes, links)
+                generate_paths(image_path,
+                               base_path,
+                               stokes,
+                               links,
+                               ignore_mocs=kwargs["ignore_mocs"])
             
 
         # create the links or print what would be linked if --dry-run was passed
