@@ -37,7 +37,7 @@ class Command(BaseCommand):
         parser.add_argument("obs_epochs", nargs="+", type=int)
         parser.add_argument("--ignore-mocs", action="store_true")
         
-    def generate_paths(image_path, base_path, stokes, links, ignore_mocs=False):
+    def generate_paths(self, image_path, base_path, stokes, links, ignore_mocs=False):
         stokes = stokes.upper()
         all_files_exist = True
         
