@@ -38,6 +38,7 @@ class Command(BaseCommand):
         
     def generate_paths(image_path, base_path, stokes, links):
         stokes = stokes.upper()
+        all_files_exist = True
         
         # Image
         image_target = base_path / f"STOKES{stokes}_IMAGES" / image_path.name
@@ -105,7 +106,7 @@ class Command(BaseCommand):
                 links.append((moc_path, moc_target))
         else:
             raise CommandError(
-                f"One or more data files for {obs} doesn't exist. Aborting release."
+                f"One or more data files for doesn't exist. Aborting release."
             )
         
     def handle(self, *args, **kwargs):
@@ -126,68 +127,21 @@ class Command(BaseCommand):
         # prepare links to the data in the release directories
         links: list[tuple[Path, Path]] = []
         for obs in obs_ready:
+            stokes_I_image_path = Path(obs.image_path)
             base_path = settings.RELEASE_DATA_DIR / obs.release_epoch / "TILES"
-            all_files_exist = True
-
-            # Stokes I image
-            image_path = Path(obs.image_path)
-            image_target = base_path / "STOKESI_IMAGES" / image_path.name
-            all_files_exist = all_files_exist and self._check_path_exists(image_path)
-
-            # Stokes I rms image
-            rms_path = (
-                Path(obs.image_path.replace("STOKESI_IMAGES", "STOKESI_RMSMAPS")).parent
-                / f"noiseMap.{image_path.name}"
-            )
-            rms_target = base_path / "STOKESI_RMSMAPS" / rms_path.name
-            all_files_exist = all_files_exist and self._check_path_exists(rms_path)
-
-            # Stokes I background image
-            background_path = (
-                Path(obs.image_path.replace("STOKESI_IMAGES", "STOKESI_RMSMAPS")).parent
-                / f"meanMap.{image_path.name}"
-            )
-            background_target = base_path / "STOKESI_RMSMAPS" / background_path.name
-            all_files_exist = all_files_exist and self._check_path_exists(
-                background_path
-            )
-
-            # Stokes I selavy components catalog
-            components_path = Path(obs.components_path)
-            components_target = base_path / "STOKESI_SELAVY" / components_path.name
-            all_files_exist = all_files_exist and self._check_path_exists(
-                components_path
-            )
-
-            # Stokes I selavy islands catalog
-            islands_path = Path(obs.islands_path)
-            islands_target = base_path / "STOKESI_SELAVY" / islands_path.name
-            all_files_exist = all_files_exist and self._check_path_exists(islands_path)
-
-            # Stokes I MOC
-            moc_path = (
-                Path(obs.image_path.replace("STOKESI_IMAGES", "STOKESI_MOCS")).parent
-                / image_path.with_suffix(".moc.fits").name
-            )
-            moc_target = base_path / "STOKESI_MOCS" / moc_path.name
-            all_files_exist = all_files_exist and self._check_path_exists(moc_path)
-
-            # store the release links if all the assumed files exist, otherwise raise
-            # an exception and abort the release.
             
-            all_files_exist, image_path, image_target, background_path, background_target, components_path, components_target, islands_path, islands_target, weight_path, weight_target = generate_paths(
-            if all_files_exist:
-                links.append((image_path, image_target))
-                links.append((rms_path, rms_target))
-                links.append((background_path, background_target))
-                links.append((components_path, components_target))
-                links.append((islands_path, islands_target))
-                links.append((moc_path, moc_target))
-                links.append((weight_path, weight_target))
-            else:
-                raise CommandError(
-                    f"One or more data files for {obs} doesn't exist. Aborting release."
-                )
+            for stokes in ["I", "V"]:
+                path_str = str(stokes_I_image_path)
+                path_str = path_str.replace("STOKESI",
+                                            "STOKES{stokes.upper()}"
+                                            )
+                path_str = path_str.replace(".i.",
+                                            ".{stokes.lower()}."
+                                            )
+                image_path = Path(path_str)
+                
+                generate_paths(image_path, base_path, stokes, links)
+            
 
         # create the links or print what would be linked if --dry-run was passed
         for source_path, target_path in links:
