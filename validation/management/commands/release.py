@@ -97,7 +97,7 @@ class Command(BaseCommand):
         # Stokes I MOC
         if stokes == "I" and not ignore_mocs:
             moc_path = (
-                Path(image_path.replace("STOKESI_IMAGES", "STOKESI_MOCS")).parent
+                Path(image_path_str.replace("STOKESI_IMAGES", "STOKESI_MOCS")).parent
                 / image_path.with_suffix(".moc.fits").name
             )
             moc_target = base_path / "STOKESI_MOCS" / moc_path.name
