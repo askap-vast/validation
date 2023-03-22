@@ -35,7 +35,79 @@ class Command(BaseCommand):
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument("--overwrite", action="store_true")
         parser.add_argument("obs_epochs", nargs="+", type=int)
+        
+    def generate_paths(image_path, base_path, stokes, links):
+        stokes = stokes.upper()
+        
+        # Image
+        image_target = base_path / f"STOKES{stokes}_IMAGES" / image_path.name
+        all_files_exist = all_files_exist and self._check_path_exists(image_path)
+        
+        # RMS map
+        rms_path = (
+                Path(obs.image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_RMSMAPS")).parent
+                / f"noiseMap.{image_path.name}"
+        )
+        rms_target = base_path / "STOKES{stokes}_RMSMAPS" / rms_path.name
+        all_files_exist = all_files_exist and self._check_path_exists(rms_path)  
+        
+        # Background map
+        background_path = (
+                Path(obs.image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_RMSMAPS")).parent
+                / f"meanMap.{image_path.name}"
+        )
+        background_target = base_path / "STOKES{stokes}_RMSMAPS" / background_path.name
+        all_files_exist = all_files_exist and self._check_path_exists(
+            background_path
+        )
+        
+        # Selavy components catalogue
+        components_path = Path(obs.components_path)
+        components_target = base_path / "STOKES{stokes}_SELAVY" / components_path.name
+        all_files_exist = all_files_exist and self._check_path_exists(
+            components_path
+        )
 
+        # Selavy islands catalogue
+        islands_path = Path(obs.islands_path)
+        islands_target = base_path / "STOKES{stokes}_SELAVY" / islands_path.name
+        all_files_exist = all_files_exist and self._check_path_exists(islands_path)
+        
+        # Weights map
+        weight_path = Path(
+            obs.image_path.replace("STOKES{stokes}_IMAGES", "STOKES{stokes}_WEIGHTS")
+        ).parent / (
+            image_path.name.replace("image", "weights")
+            .replace(".restored", "")
+            .replace(".conv", "")
+        )
+        weight_target = base_path / "STOKES{stokes}_WEIGHTS" / weight_path.name
+        all_files_exist = all_files_exist and self._check_path_exists(weight_path)
+        
+        # Stokes I MOC
+        if stokes == "I":
+            moc_path = (
+                Path(obs.image_path.replace("STOKESI_IMAGES", "STOKESI_MOCS")).parent
+                / image_path.with_suffix(".moc.fits").name
+            )
+            moc_target = base_path / "STOKESI_MOCS" / moc_path.name
+            all_files_exist = all_files_exist and self._check_path_exists(moc_path)
+        
+        if all_files_exist:
+            links.append((image_path, image_target))
+            links.append((rms_path, rms_target))
+            links.append((background_path, background_target))
+            links.append((components_path, components_target))
+            links.append((islands_path, islands_target))
+            links.append((weight_path, weight_target))
+            
+            if stokes == "I":
+                links.append((moc_path, moc_target))
+        else:
+            raise CommandError(
+                f"One or more data files for {obs} doesn't exist. Aborting release."
+            )
+        
     def handle(self, *args, **kwargs):
         # get the observations ready for release
         obs_ready = Observation.objects.exclude(release_epoch="").filter(
@@ -57,12 +129,12 @@ class Command(BaseCommand):
             base_path = settings.RELEASE_DATA_DIR / obs.release_epoch / "TILES"
             all_files_exist = True
 
-            # image
+            # Stokes I image
             image_path = Path(obs.image_path)
             image_target = base_path / "STOKESI_IMAGES" / image_path.name
             all_files_exist = all_files_exist and self._check_path_exists(image_path)
 
-            # rms image
+            # Stokes I rms image
             rms_path = (
                 Path(obs.image_path.replace("STOKESI_IMAGES", "STOKESI_RMSMAPS")).parent
                 / f"noiseMap.{image_path.name}"
@@ -70,7 +142,7 @@ class Command(BaseCommand):
             rms_target = base_path / "STOKESI_RMSMAPS" / rms_path.name
             all_files_exist = all_files_exist and self._check_path_exists(rms_path)
 
-            # background image
+            # Stokes I background image
             background_path = (
                 Path(obs.image_path.replace("STOKESI_IMAGES", "STOKESI_RMSMAPS")).parent
                 / f"meanMap.{image_path.name}"
@@ -80,19 +152,19 @@ class Command(BaseCommand):
                 background_path
             )
 
-            # selavy components catalog
+            # Stokes I selavy components catalog
             components_path = Path(obs.components_path)
             components_target = base_path / "STOKESI_SELAVY" / components_path.name
             all_files_exist = all_files_exist and self._check_path_exists(
                 components_path
             )
 
-            # selavy islands catalog
+            # Stokes I selavy islands catalog
             islands_path = Path(obs.islands_path)
             islands_target = base_path / "STOKESI_SELAVY" / islands_path.name
             all_files_exist = all_files_exist and self._check_path_exists(islands_path)
 
-            # MOC
+            # Stokes I MOC
             moc_path = (
                 Path(obs.image_path.replace("STOKESI_IMAGES", "STOKESI_MOCS")).parent
                 / image_path.with_suffix(".moc.fits").name
@@ -100,19 +172,10 @@ class Command(BaseCommand):
             moc_target = base_path / "STOKESI_MOCS" / moc_path.name
             all_files_exist = all_files_exist and self._check_path_exists(moc_path)
 
-            # weights image
-            weight_path = Path(
-                obs.image_path.replace("STOKESI_IMAGES", "STOKESI_WEIGHTS")
-            ).parent / (
-                image_path.name.replace("image", "weights")
-                .replace(".restored", "")
-                .replace(".conv", "")
-            )
-            weight_target = base_path / "STOKESI_WEIGHTS" / weight_path.name
-            all_files_exist = all_files_exist and self._check_path_exists(weight_path)
-
             # store the release links if all the assumed files exist, otherwise raise
             # an exception and abort the release.
+            
+            all_files_exist, image_path, image_target, background_path, background_target, components_path, components_target, islands_path, islands_target, weight_path, weight_target = generate_paths(
             if all_files_exist:
                 links.append((image_path, image_target))
                 links.append((rms_path, rms_target))
