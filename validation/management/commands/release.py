@@ -152,9 +152,9 @@ class Command(BaseCommand):
             base_path = settings.RELEASE_DATA_DIR / obs.release_epoch / "TILES"
             
             for stokes in ["I", "V"]:
-                image_path = self.correct_stokes_path(stokes_I_image_path, stokes)
-                components_path = self.correct_stokes_path(stokes_I_comp_path, stokes)
-                islands_path = self.correct_stokes_path(stokes_I_isl_path, stokes)
+                image_path = self._correct_stokes_path(stokes_I_image_path, stokes)
+                components_path = self._correct_stokes_path(stokes_I_comp_path, stokes)
+                islands_path = self._correct_stokes_path(stokes_I_isl_path, stokes)
                 
                 self.generate_paths(image_path,
                                     components_path,
