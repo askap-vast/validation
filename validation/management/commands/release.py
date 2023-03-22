@@ -111,7 +111,7 @@ class Command(BaseCommand):
             links.append((islands_path, islands_target))
             links.append((weight_path, weight_target))
             
-            if stokes == "I":
+            if stokes == "I" and not ignore_mocs:
                 links.append((moc_path, moc_target))
         else:
             raise CommandError(
