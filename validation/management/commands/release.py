@@ -84,11 +84,11 @@ class Command(BaseCommand):
         all_files_exist = all_files_exist and self._check_path_exists(islands_path)
         
         if stokes == "V":
-            islands_path_n = islands_path.parent / islands_path.name.replace('selavy', 'nselavy')
+            islands_path_n = islands_path.parent / islands_path.name.replace('selavy-image', 'selavy-nimage')
             islands_target_n = islands_target.parent / islands_target.name.replace('selavy', 'nselavy')
             all_files_exist = all_files_exist and self._check_path_exists(islands_path_n)
             
-            components_path_n = components_path.parent / components_path.name.replace('selavy', 'nselavy')
+            components_path_n = components_path.parent / components_path.name.replace('selavy-image', 'selavy-nimage')
             components_target_n = components_target.parent / components_target.name.replace('selavy', 'nselavy')
             all_files_exist = all_files_exist and self._check_path_exists(components_path_n)
         
