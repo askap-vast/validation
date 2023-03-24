@@ -83,6 +83,15 @@ class Command(BaseCommand):
         islands_target = base_path / f"STOKES{stokes}_SELAVY" / islands_path.name
         all_files_exist = all_files_exist and self._check_path_exists(islands_path)
         
+        if stokes == "V":
+            islands_path_n = islands_path.parent / islands_path.name.replace('selavy', 'nselavy')
+            islands_target_n = islands_target.parent / islands_target.name.replace('selavy', 'nselavy')
+            all_files_exist = all_files_exist and self._check_path_exists(islands_path_n)
+            
+            components_path_n = components_path.parent / components_path.name.replace('selavy', 'nselavy')
+            components_target_n = components_target.parent / components_target.name.replace('selavy', 'nselavy')
+            all_files_exist = all_files_exist and self._check_path_exists(components_path_n)
+        
         # Weights map
         weight_path = Path(
             image_path_str.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_WEIGHTS")
@@ -103,6 +112,7 @@ class Command(BaseCommand):
             moc_target = base_path / "STOKESI_MOCS" / moc_path.name
             all_files_exist = all_files_exist and self._check_path_exists(moc_path)
         
+        
         if all_files_exist:
             links.append((image_path, image_target))
             links.append((rms_path, rms_target))
@@ -113,6 +123,9 @@ class Command(BaseCommand):
             
             if stokes == "I" and not ignore_mocs:
                 links.append((moc_path, moc_target))
+            if stokes == "V":
+                links.append((islands_path_n, islands_target_n))
+                links.append((components_path_n, components_target_n))
         else:
             raise CommandError(
                 f"One or more data files for doesn't exist. Aborting release."
