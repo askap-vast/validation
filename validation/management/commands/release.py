@@ -36,6 +36,7 @@ class Command(BaseCommand):
         parser.add_argument("--overwrite", action="store_true")
         parser.add_argument("obs_epochs", nargs="+", type=int)
         parser.add_argument("--ignore-mocs", action="store_true")
+        parser.add_argument("--ignore-stokesv", action="store_true")
         
     def generate_paths(self,
                        image_path,
@@ -149,6 +150,9 @@ class Command(BaseCommand):
         )
         release_epochs = set(obs_ready.values_list("release_epoch", flat=True))
 
+        stokes_vals = ["I", "V"]
+        if kwargs["ignore_stokesv"]
+            stokes_vals = ["I"]
         # create necessary release directories
         for release_epoch, data_dir in product(release_epochs, DATA_DIRS):
             epoch_data_dir: Path = (
@@ -158,6 +162,7 @@ class Command(BaseCommand):
 
         # prepare links to the data in the release directories
         links: list[tuple[Path, Path]] = []
+
         for obs in obs_ready:
             stokes_I_image_path = obs.image_path
             stokes_I_comp_path = obs.components_path
@@ -165,7 +170,7 @@ class Command(BaseCommand):
             
             base_path = settings.RELEASE_DATA_DIR / obs.release_epoch / "TILES"
             
-            for stokes in ["I", "V"]:
+            for stokes in stokes_vals:
                 image_path = self._correct_stokes_path(stokes_I_image_path, stokes)
                 components_path = self._correct_stokes_path(stokes_I_comp_path, stokes)
                 islands_path = self._correct_stokes_path(stokes_I_isl_path, stokes)
