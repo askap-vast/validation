@@ -151,7 +151,7 @@ class Command(BaseCommand):
         release_epochs = set(obs_ready.values_list("release_epoch", flat=True))
 
         stokes_vals = ["I", "V"]
-        if kwargs["ignore_stokesv"]
+        if kwargs["ignore_stokesv"]:
             stokes_vals = ["I"]
         # create necessary release directories
         for release_epoch, data_dir in product(release_epochs, DATA_DIRS):
