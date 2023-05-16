@@ -3,6 +3,15 @@
 {% load validation_extras %}
 {% block content %}
 {% url 'pending-list-all' as url_pending_list_all %}
+<!-- Called by 'Export CSV' button in title div, replaces current observations
+url with active filters with export_csv url with the same filters -->
+<script>
+  function export_csv_url() { 
+    let query = window.location.search;
+    let new_url = "{% url 'export_csv' %}" + query; 
+    window.location.replace(new_url); 
+  }
+</script>
 <main>
 <section class="container">
 <div class="d-flex justify-content-between">
@@ -28,6 +37,9 @@
     </li>
   </ul>
   {% endif %}
+  <!-- Button that calls the script export_csv_url above to export the current
+  ListView with active filters to CSV -->
+  <a class="btn btn-primary my-3" onclick="export_csv_url()">Export CSV</a>
 </div>
 
 
