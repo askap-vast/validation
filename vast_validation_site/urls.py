@@ -25,6 +25,7 @@ from validation.views import (
     PendingValidationListView,
     PendingValidationAssignedListView,
     login,
+    ObservationListCSVView,
 )
 import debug_toolbar
 
@@ -42,8 +43,13 @@ urlpatterns = [
         ObservationDetailView.as_view(),
         name="observation-detail",
     ),
+    path("export_csv/", ObservationListCSVView.as_view(), name="export_csv"),
     path("pending/", PendingValidationAssignedListView.as_view(), name="pending-list"),
-    path("pending/me", PendingValidationAssignedListView.as_view(), name="pending-list-me"),
+    path(
+        "pending/me",
+        PendingValidationAssignedListView.as_view(),
+        name="pending-list-me",
+    ),
     path("pending/all", PendingValidationListView.as_view(), name="pending-list-all"),
     path("login/", login, name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
