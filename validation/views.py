@@ -1,3 +1,4 @@
+import csv
 from itertools import groupby
 from operator import itemgetter
 from typing import Any, Dict, List
@@ -8,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db.models import Count
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import ListView, TemplateView
@@ -23,6 +25,11 @@ from validation.plots import (
     make_user_validation_progress_plot,
 )
 from validation.serializers import ObservationSerializer
+
+
+# The default project code, used as a column when generating a CSV in the
+# ObservationListCSVView class.
+DEFAULT_PROJ_CODE = "AS207"
 
 
 def login(request):
@@ -50,13 +57,19 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             # Observation.ValidationState
             count_by_epoch_quality[epoch] = sorted(
                 grouper,
-                key=lambda d: Observation.ValidationState.values.index(d["data_quality"]),
+                key=lambda d: Observation.ValidationState.values.index(
+                    d["data_quality"]
+                ),
             )
             # count total obs in epoch
-            epoch_total_obs: int = sum(d["count"] for d in count_by_epoch_quality[epoch])
+            epoch_total_obs: int = sum(
+                d["count"] for d in count_by_epoch_quality[epoch]
+            )
             # add display colors and percentages to each data quality count result
             for epoch_quality_result in count_by_epoch_quality[epoch]:
-                epoch_quality_result["color"] = Observation.ValidationState.get_color_class(
+                epoch_quality_result[
+                    "color"
+                ] = Observation.ValidationState.get_color_class(
                     epoch_quality_result["data_quality"]
                 )
                 epoch_quality_result["percentage"] = round(
@@ -127,6 +140,76 @@ class ObservationListView(LoginRequiredMixin, ListView):
         context["filterset"] = self.filterset
         context["prefilter_count"] = self.prefilter_count
         return context
+
+
+class ObservationListCSVView(LoginRequiredMixin, ListView):
+    """A View exporting and corresponding to the ObservationListView."""
+
+    model = Observation
+    paginate_by = settings.DEFAULT_PAGINATE_BY
+    filterset_class = ObservationFilter
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        self.prefilter_count = queryset.count()
+        self.filterset = self.filterset_class(self.request.GET, queryset=queryset)
+        return self.filterset.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        page = context["page_obj"]
+        context["page_range"] = page.paginator.get_elided_page_range(
+            page.number, on_ends=1, on_each_side=1
+        )
+        context["page_title"] = "VAST Validation - Observations"
+        context["filterset"] = self.filterset
+        context["prefilter_count"] = self.prefilter_count
+        return context
+
+    def get(self, *args, **kwargs):
+        """Replaces the as_view() method to return an HTTP -> text/csv response
+        rather than a webpage. Exports the current query set (as filtered
+        through ObservationListView) to CSV, which is downloaded upon accessing
+        this view.
+        """
+        # Assume the observation epoch is the epoch of the first observation in
+        # the filtered queryset (change naming convention for future
+        # implementations?)
+        epoch = getattr(list(self.get_queryset())[0], "observation_epoch")
+        filename = "_".join(["epoch", str(epoch), "validation.csv"])
+
+        # Define the returned HTTP response to be in CSV text format
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="' + filename + '"'
+
+        # The headers of the data table
+        headers = ["SBID", "Project Code", "Quality Level", "Validation Notes"]
+
+        # Write the headers to CSV
+        writer = csv.writer(response)
+        writer.writerow(headers)
+
+        # Iterate over each observation in the filtered query set as found in
+        # the ObservationListView
+        for observation in self.get_queryset():
+            # Create list representing one Observation to be written as a row in
+            # a CSV with data corresponding to desired headers
+            row = [
+                getattr(observation, "sbid"),
+                (
+                    DEFAULT_PROJ_CODE
+                    if kwargs.get("proj_code") is None
+                    else kwargs["proj_code"]
+                ),
+                observation.get_data_quality_display().upper(),
+                getattr(observation, "validation_comment").replace(",", ";"),
+            ]
+
+            # Write the populated row to the response CSV
+            writer.writerow(row)
+
+        # Return the CSV response - this sends the file to be downloaded
+        return response
 
 
 class PendingValidationListView(ObservationListView):
