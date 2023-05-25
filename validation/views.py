@@ -183,7 +183,7 @@ class ObservationListCSVView(LoginRequiredMixin, ListView):
         response["Content-Disposition"] = 'attachment; filename="' + filename + '"'
 
         # The headers of the data table
-        headers = ["SBID", "Project Code", "Quality Level", "Validation Notes"]
+        headers = ["SBID", "Project code", "Quality level", "Validation notes"]
 
         # Write the headers to CSV
         writer = csv.writer(response)
