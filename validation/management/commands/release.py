@@ -46,7 +46,8 @@ class Command(BaseCommand):
                        base_path,
                        stokes,
                        links,
-                       ignore_mocs=False):
+                       ignore_mocs=False,
+                       move_weights=False):
         stokes = stokes.upper()
         all_files_exist = True
         image_path_str = str(image_path)
@@ -95,7 +96,7 @@ class Command(BaseCommand):
             all_files_exist = all_files_exist and self._check_path_exists(components_path_n)
         
         # Weights map
-        if kwargs["move_weights"]:
+        if move_weights:
             weight_path = Path(
                 image_path_str.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_WEIGHTS")
             ).parent / (
@@ -123,7 +124,7 @@ class Command(BaseCommand):
             links.append((components_path, components_target))
             links.append((islands_path, islands_target))
             
-            if kwargs["move_weights"]:
+            if move_weights:
                 links.append((weight_path, weight_target))
             if stokes == "I" and not ignore_mocs:
                 links.append((moc_path, moc_target))
@@ -184,7 +185,8 @@ class Command(BaseCommand):
                                     base_path,
                                     stokes,
                                     links,
-                                    ignore_mocs=kwargs["ignore_mocs"]
+                                    ignore_mocs=kwargs["ignore_mocs"],
+                                    move_weights=kwargs["move_weights"]
                                     )
             
 
