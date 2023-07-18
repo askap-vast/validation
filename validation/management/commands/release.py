@@ -37,6 +37,7 @@ class Command(BaseCommand):
         parser.add_argument("obs_epochs", nargs="+", type=int)
         parser.add_argument("--ignore-mocs", action="store_true")
         parser.add_argument("--ignore-stokesv", action="store_true")
+        parser.add_argument("--move-weights", action="store_true")
         
     def generate_paths(self,
                        image_path,
@@ -94,15 +95,16 @@ class Command(BaseCommand):
             all_files_exist = all_files_exist and self._check_path_exists(components_path_n)
         
         # Weights map
-        weight_path = Path(
-            image_path_str.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_WEIGHTS")
-        ).parent / (
-            image_path.name.replace("image", "weights")
-            .replace(".restored", "")
-            .replace(".conv", "")
-        )
-        weight_target = base_path / f"STOKES{stokes}_WEIGHTS" / weight_path.name
-        all_files_exist = all_files_exist and self._check_path_exists(weight_path)
+        if kwargs["move_weights"]:
+            weight_path = Path(
+                image_path_str.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_WEIGHTS")
+            ).parent / (
+                image_path.name.replace("image", "weights")
+                .replace(".restored", "")
+                .replace(".conv", "")
+            )
+            weight_target = base_path / f"STOKES{stokes}_WEIGHTS" / weight_path.name
+            all_files_exist = all_files_exist and self._check_path_exists(weight_path)
         
         # Stokes I MOC
         if stokes == "I" and not ignore_mocs:
@@ -120,8 +122,9 @@ class Command(BaseCommand):
             links.append((background_path, background_target))
             links.append((components_path, components_target))
             links.append((islands_path, islands_target))
-            links.append((weight_path, weight_target))
             
+            if kwargs["move_weights"]:
+                links.append((weight_path, weight_target))
             if stokes == "I" and not ignore_mocs:
                 links.append((moc_path, moc_target))
             if stokes == "V":
