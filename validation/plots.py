@@ -421,7 +421,7 @@ def make_psf_plot(
 def make_user_validation_progress_plot(
     plot_width: int = 400,
     plot_height: int = 400,
-    lookback_time: str = '20W'
+    lookback_time: str = '20W',
     power_user_cut: int = 3,
 ) -> Figure:
     validated_observations = (
@@ -488,7 +488,6 @@ def make_user_validation_progress_plot(
     fig_user_progress.xaxis[0].formatter.days = ["%b %d"]  # date format e.g. Sep 19
 
     usernames = counts_df.index.unique()
-    power_user_cut = 3
     power_users = list(total_validated_by_user.sort_values(ascending=False).iloc[:power_user_cut].index)
 
     users_to_plot = []
