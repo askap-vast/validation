@@ -419,7 +419,10 @@ def make_psf_plot(
 
 
 def make_user_validation_progress_plot(
-    plot_width: int = 400, plot_height: int = 400
+    plot_width: int = 400,
+    plot_height: int = 400,
+    lookback_time: str = '12W',
+    power_user_cut: int = 5,
 ) -> Figure:
     validated_observations = (
         Observation.objects.exclude(
@@ -462,10 +465,10 @@ def make_user_validation_progress_plot(
         .data_quality.count()
         .sort_values(ascending=False)
     )
-    x_start = max(counts_df.date.max() - pd.Timedelta("4W"), counts_df.date.min())
+    x_start = max(counts_df.date.max() - pd.Timedelta(lookback_time), counts_df.date.min())
     x_end = counts_df.date.max()
     if x_start == x_end:
-        x_start -= pd.Timedelta("4W")
+        x_start -= pd.Timedelta(lookback_time)
 
     fig_user_progress = figure(
         frame_width=plot_width,
@@ -483,9 +486,21 @@ def make_user_validation_progress_plot(
         title="Total validated observations by user",
     )
     fig_user_progress.xaxis[0].formatter.days = ["%b %d"]  # date format e.g. Sep 19
+
     usernames = counts_df.index.unique()
-    cmap = {username: color for username, color in zip(usernames, cycle(Dark2_8))}
+    power_users = list(total_validated_by_user.sort_values(ascending=False).iloc[:power_user_cut].index)
+
+    users_to_plot = []
     for username in total_validated_by_user.index:
+        df = counts_df.loc[username]
+        plot_df = df[(df['date'] > x_start) & (df['date'] <= x_end)].sort_values('date')
+        if plot_df.data_quality.iloc[0] == plot_df.data_quality.iloc[-1]:
+            if username not in power_users:
+                continue
+        users_to_plot.append(username)
+
+    cmap = {username: color for username, color in zip(users_to_plot, cycle(Dark2_8))}
+    for username in users_to_plot:
         df = counts_df.loc[username]
         fig_user_progress.line(
             df.date,
