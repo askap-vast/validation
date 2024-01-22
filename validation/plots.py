@@ -421,8 +421,8 @@ def make_psf_plot(
 def make_user_validation_progress_plot(
     plot_width: int = 400,
     plot_height: int = 400,
-    lookback_time: str = '20W',
-    power_user_cut: int = 3,
+    lookback_time: str = '12W',
+    power_user_cut: int = 5,
 ) -> Figure:
     validated_observations = (
         Observation.objects.exclude(
