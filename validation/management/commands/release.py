@@ -38,6 +38,7 @@ class Command(BaseCommand):
         parser.add_argument("--ignore-mocs", action="store_true")
         parser.add_argument("--ignore-stokesv", action="store_true")
         parser.add_argument("--move-weights", action="store_true")
+        parsey.add_argument("--processed-data", action="store_true")
         
     def generate_paths(self,
                        image_path,
@@ -159,6 +160,8 @@ class Command(BaseCommand):
             stokes_vals = ["I"]
         # create necessary release directories
         for release_epoch, data_dir in product(release_epochs, DATA_DIRS):
+            if kwargs["processed_data"]:
+                data_dir += "_PROCESSED"
             epoch_data_dir: Path = (
                 settings.RELEASE_DATA_DIR / release_epoch / "TILES" / data_dir
             )
