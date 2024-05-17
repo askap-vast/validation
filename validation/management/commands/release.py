@@ -38,7 +38,7 @@ class Command(BaseCommand):
         parser.add_argument("--ignore-mocs", action="store_true")
         parser.add_argument("--ignore-stokesv", action="store_true")
         parser.add_argument("--move-weights", action="store_true")
-        parsey.add_argument("--processed-data", action="store_true")
+        parser.add_argument("--processed-data", action="store_true")
         
     def generate_paths(self,
                        image_path,
