@@ -200,7 +200,7 @@ class Command(BaseCommand):
                 components_path = self._correct_stokes_path(stokes_I_comp_path, stokes)
                 islands_path = self._correct_stokes_path(stokes_I_isl_path, stokes)
                 
-                if processed_data:
+                if kwargs['processed_data']:
                     image_path = self._correct_processed_path(image_path, "IMAGES")
                     components_path = self._correct_processed_path(components_path, "SELAVY")
                     islands_path = self._correct_processed_path(islands_path, "SELAVY")
