@@ -48,13 +48,16 @@ class Command(BaseCommand):
                        stokes,
                        links,
                        ignore_mocs=False,
-                       move_weights=False):
+                       move_weights=False,
+                       processed_data=False,
+                       ):
         stokes = stokes.upper()
         all_files_exist = True
         image_path_str = str(image_path)
         
         # Image
-        image_target = base_path / f"STOKES{stokes}_IMAGES" / image_path.name
+        image_name = image_path.name
+        image_target = base_path / image_path.parts[-3] / image_name
         all_files_exist = all_files_exist and self._check_path_exists(image_path)
         
         # RMS map
@@ -62,7 +65,7 @@ class Command(BaseCommand):
                 Path(image_path_str.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_RMSMAPS")).parent
                 / f"noiseMap.{image_path.name}"
         )
-        rms_target = base_path / f"STOKES{stokes}_RMSMAPS" / rms_path.name
+        rms_target = base_path / rms_path.parts[-3] / rms_path.name
         all_files_exist = all_files_exist and self._check_path_exists(rms_path)  
         
         # Background map
@@ -70,31 +73,33 @@ class Command(BaseCommand):
                 Path(image_path_str.replace(f"STOKES{stokes}_IMAGES", f"STOKES{stokes}_RMSMAPS")).parent
                 / f"meanMap.{image_path.name}"
         )
-        background_target = base_path / f"STOKES{stokes}_RMSMAPS" / background_path.name
+        background_target = base_path / background_path.parts[-3] / background_path.name
         all_files_exist = all_files_exist and self._check_path_exists(
             background_path
         )
         
         # Selavy components catalogue
         components_path = Path(components_path)
-        components_target = base_path / f"STOKES{stokes}_SELAVY" / components_path.name
+        components_name = components_path.name
+        components_target = base_path / components_path.parts[-3] / components_name
         all_files_exist = all_files_exist and self._check_path_exists(
             components_path
         )
 
         # Selavy islands catalogue
-        islands_path = Path(islands_path)
-        islands_target = base_path / f"STOKES{stokes}_SELAVY" / islands_path.name
-        all_files_exist = all_files_exist and self._check_path_exists(islands_path)
-        
-        if stokes == "V":
-            islands_path_n = islands_path.parent / islands_path.name.replace('selavy-image', 'selavy-nimage')
-            islands_target_n = islands_target.parent / islands_target.name.replace('selavy', 'nselavy')
-            all_files_exist = all_files_exist and self._check_path_exists(islands_path_n)
+        if not processed_data:
+            islands_path = Path(islands_path)
+            islands_target = base_path / islands_path.parts[-3] / islands_path.name
+            all_files_exist = all_files_exist and self._check_path_exists(islands_path)
             
-            components_path_n = components_path.parent / components_path.name.replace('selavy-image', 'selavy-nimage')
-            components_target_n = components_target.parent / components_target.name.replace('selavy', 'nselavy')
-            all_files_exist = all_files_exist and self._check_path_exists(components_path_n)
+            if stokes == "V":
+                islands_path_n = islands_path.parent / islands_path.name.replace('selavy-image', 'selavy-nimage')
+                islands_target_n = islands_target.parent / islands_target.name.replace('selavy', 'nselavy')
+                all_files_exist = all_files_exist and self._check_path_exists(islands_path_n)
+                
+                components_path_n = components_path.parent / components_path.name.replace('selavy-image', 'selavy-nimage')
+                components_target_n = components_target.parent / components_target.name.replace('selavy', 'nselavy')
+                all_files_exist = all_files_exist and self._check_path_exists(components_path_n)
         
         # Weights map
         if move_weights:
@@ -112,9 +117,9 @@ class Command(BaseCommand):
         if stokes == "I" and not ignore_mocs:
             moc_path = (
                 Path(image_path_str.replace("STOKESI_IMAGES", "STOKESI_MOCS")).parent
-                / image_path.with_suffix(".moc.fits").name
+                / image_path.with_suffix(".moc.fits").name.replace(".processed", "")
             )
-            moc_target = base_path / "STOKESI_MOCS" / moc_path.name
+            moc_target = base_path / moc_path.parts[-3] / moc_path.name
             all_files_exist = all_files_exist and self._check_path_exists(moc_path)
         
         
@@ -123,15 +128,17 @@ class Command(BaseCommand):
             links.append((rms_path, rms_target))
             links.append((background_path, background_target))
             links.append((components_path, components_target))
-            links.append((islands_path, islands_target))
+            if not processed_data:
+                links.append((islands_path, islands_target))
             
             if move_weights:
                 links.append((weight_path, weight_target))
             if stokes == "I" and not ignore_mocs:
                 links.append((moc_path, moc_target))
             if stokes == "V":
-                links.append((islands_path_n, islands_target_n))
                 links.append((components_path_n, components_target_n))
+                if not processed_data:
+                    links.append((islands_path_n, islands_target_n))
         else:
             raise CommandError(
                 f"One or more data files for doesn't exist. Aborting release."
@@ -145,6 +152,17 @@ class Command(BaseCommand):
         path_str = path_str.replace(".i.",
                                     f".{stokes.lower()}."
                                     )
+        return Path(path_str)
+    
+    def _correct_processed_path(self, path, datatype):
+        path_str = str(path)
+        path_str = path_str.replace(datatype,
+                                    f"{datatype}_PROCESSED"
+                                    )
+        ext = '.fits'
+        if datatype=='SELAVY':
+            ext = '.xml'
+        path_str = path_str.replace(ext, f".processed{ext}")
         return Path(path_str)
         
     def handle(self, *args, **kwargs):
@@ -182,6 +200,11 @@ class Command(BaseCommand):
                 components_path = self._correct_stokes_path(stokes_I_comp_path, stokes)
                 islands_path = self._correct_stokes_path(stokes_I_isl_path, stokes)
                 
+                if processed_data:
+                    image_path = self._correct_processed_path(image_path, "IMAGES")
+                    components_path = self._correct_processed_path(components_path, "SELAVY")
+                    islands_path = self._correct_processed_path(islands_path, "SELAVY")
+                
                 self.generate_paths(image_path,
                                     components_path,
                                     islands_path,
@@ -189,7 +212,8 @@ class Command(BaseCommand):
                                     stokes,
                                     links,
                                     ignore_mocs=kwargs["ignore_mocs"],
-                                    move_weights=kwargs["move_weights"]
+                                    move_weights=kwargs["move_weights"],
+                                    processed_data=kwargs["processed_data"]
                                     )
             
 
