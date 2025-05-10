@@ -85,21 +85,27 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         """
 
         # get the progress plot
-        num_validated = Observation.objects.exclude(
-            data_quality=Observation.ValidationState.NOT_VALIDATED
-        ).count()
-        prog_plot_script, prog_plot_divs = (
-            components(
-                row(
-                    make_user_validation_progress_plot(
-                        plot_width=None, plot_height=400
-                    ),
-                    sizing_mode="stretch_width",
+        # raises key error when database not populated
+        progress_plot_made = False
+        try:
+            num_validated = Observation.objects.exclude(
+                data_quality=Observation.ValidationState.NOT_VALIDATED
+            ).count()
+            prog_plot_script, prog_plot_divs = (
+                components(
+                    row(
+                        make_user_validation_progress_plot(
+                            plot_width=None, plot_height=400
+                        ),
+                        sizing_mode="stretch_width",
+                    )
                 )
+                if num_validated > 0
+                else "No validated observations in database."
             )
-            if num_validated > 0
-            else "No validated observations in database."
-        )
+            progress_plot_made = True
+        except Exception as e:
+            print(e)
 
         context["validation_count_by_epoch_quality"] = count_by_epoch_quality
         context["max_display_epochs"] = settings.DASHBOARD_MAX_DISPLAY_EPOCHS
@@ -112,10 +118,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context["bokeh_sri_hash"] = bokeh.resources.get_sri_hashes_for_version(
             bokeh_version
         )[f"bokeh-{bokeh_version}.min.js"]
-        context["prog_plot"] = {
-            "script": prog_plot_script,
-            "divs": prog_plot_divs,
-        }
+        if progress_plot_made:
+            context["prog_plot"] = {
+                "script": prog_plot_script,
+                "divs": prog_plot_divs,
+            }
         return context
 
 
