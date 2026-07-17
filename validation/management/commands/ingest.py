@@ -69,6 +69,14 @@ class Command(BaseCommand):
                 field_match = re.search(r"VAST_\d+[\+\-]\d+\w?", image_path.name)
                 if field_match is None:
                     self.stdout.write(
+                        self.style.WARNING(
+                            f"Checking if {image_path.name} uses Galactic naming..."
+                        )
+                    )
+                    # check for galactic field name format
+                    field_match = re.search(r"VAST_G\d+[\+\-]\d+\w?", image_path.name)
+                if field_match is None:
+                    self.stdout.write(
                         self.style.ERROR(
                             "Could not find the field in the filename for"
                             f" {image_path.name}"
