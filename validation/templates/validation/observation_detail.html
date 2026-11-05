@@ -4,7 +4,8 @@
 {% load validation_extras %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" />
+<!-- <link rel="stylesheet" href="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css" /> -->
+ <link rel="stylesheet" href="{% static 'validation/aladin.min.261026.css' %}" />
 {% endblock extra_head %}
 
 {% block content %}
@@ -191,7 +192,9 @@
 
 {% if object.release_epoch %}
 <!-- Aladin Lite -->
-<script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8">
+<!-- <script type="text/javascript" src="https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js" charset="utf-8">
+</script> -->
+<script type="text/javascript" src="{% static 'validation/aladin.min.261022.js' %}" charset="utf-8">
 </script>
 <script type="text/javascript">
   var aladin = A.aladin('#aladin-lite-div', {
